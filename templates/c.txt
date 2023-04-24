@@ -1,0 +1,30 @@
+<template>
+    !name: c
+    !dir: src
+    !dir: headers
+    !ebin: <$name>
+    <file>
+        !name: src/main.c
+        <cnt>
+            '#include <stdio.h>
+            '
+            'int main(int argc, char** argv){
+            '    printf("Hello World!");
+            '    return 0;
+            '}
+        </cnt>
+    </file>
+    <clean>
+        !dir: bin
+    </clean>
+    <rule>
+        !in: src/<*>.c
+        !out: bin/<*>.c.o
+        !exe: gcc -c -o <$out> <$in> <$includes>
+    </rule>
+    <link>
+        !in: bin/<*>.o
+        !out: <$name>
+        !exe: gcc -o <$out> <$in> <$libs>
+    </link>
+</template>
