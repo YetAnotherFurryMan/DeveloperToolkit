@@ -27,8 +27,7 @@ int main(int argc, char** argv){
     if(STRCMP_EQ(task, "init")){
         std::string name;
         std::string templ;
-        std::vector<std::string> templ_p;
-        std::vector<std::string> templs_p;
+        std::vector<std::string> templs;
         pr::type type = pr::PROJECT_TYPE_PROJECT;
         pr::build build = pr::PROJECT_BUILD_MAKE;
 
@@ -72,46 +71,17 @@ int main(int argc, char** argv){
                 if(++i >= argc)
                     dtk::log::fatal_error("Excepted argument after '-T'.", 83); //ELOAD
                 
-                templ_p.emplace_back(argv[i]);
-            } else if(STRCMP_EQ(argv[i], "-C") || STRCMP_EQ(argv[i], "--template-colection-file")){ //Add a templates file, return an error if there is a syntax error
-                if(++i >= argc)
-                    dtk::log::fatal_error("Excepted argument after '-C'.", 83); //ELOAD
-
-                templs_p.emplace_back(argv[i]);
+                templs.emplace_back(argv[i]);
             } else{
                 dtk::log::fatal_error(std::string("Unknown argument \"") + argv[i] + "\"", 158); //EMVSPARM
             }
         }
 
         //Load templates
-        std::vector<fd::ProjectTemplate> templates;
+        std::vector<fd::ProjectTemplate> templates = fd::ProjectTemplate::load("templates/default.txt");
 
-        //Default template
-        fd::ProjectTemplate c_cpp;
-        c_cpp.name = "c_cpp";
-        c_cpp.directories = {"src", "headers"};
-        c_cpp.files.emplace_back("src/main.cpp", "#include <iostream>\n\nint main(int argc, char** argv){\n\tstd::cout << \"Hello World!\" << std::endl;\n\treturn 0;\n}");
-        c_cpp.makefile = "name := #!NAME!#\n\nincludes := #!INCLUDES!# -I headers\n\ncflags := #!C_FLAGS!# $(includes)\ncppflags := #!CXX_FLAGS!# $(includes)\nlinkerflags := #!LD_FLAGS!#\n\nbin := $(patsubst src/%,bin/%.o,$(wildcard src/*.c*))\n\n.PHONY: all\nall: clean bin $(name)\n\nclean:\n\t@echo Clean $(name)\n\t@rm -f bin/*\n\t@rm -f $(name)\n\nbin:\n\t@mkdir $@\n\nbin/%.c.o:src/%.c\n\t@echo Compiling $^\n\t@gcc -c -o $@ $^ $(cflags)\n\nbin/%.cpp.o:src/%.cpp\n\t@echo Compiling $^\n\t@g++ -c -o $@ $^ $(cppflags)\n\n$(name): $(bin)\n\t@echo Linking $(name)\n\t@g++ -o $@ $^ $(linkerflags)\n\ntest: $(name)\n\t@echo Test $(name)\n\t./$(name)\n";
-        c_cpp.bash = "name='#!NAME!#'\n\nincludes='-I headers #!INCLUDES!#'\n\ncflags=('#!C_FLAGS!#' $includes)\ncppflags=('#!CXX_FLAGS!#' $includes)\nlinkerflags='#!LD_FLAGS!#'\n\n#Clean:\necho Cleaning $name\nrm -fr bin/*\nrm -f $name*\n\n#Create bin:\nmkdir bin 2>/dev/null\n\n#Compile sources\nfor src in ./src/*\ndo\n\techo Compiling $src\n\tif [[ $src == *.c ]]\n\tthen\n\t\tgcc -c -o bin/$( echo $src | cut -d '/' -f 2).o $src $cflags\n\telif [[ $src == *.cpp ]]\n\tthen\n\t\tg++ -c -o bin/$( echo $src | cut -d '/' -f 2).o $src $cppflags\n\telse\n\t\techo Error: No rule to compile $src\n\tfi\ndone\n\n#Link:\necho Linking $name\ng++ -o $name bin/*.o $linkerflags\n";
-        templates.push_back(c_cpp);
-
-        for(auto& tp: templ_p){
-            auto tmpl = fd::ProjectTemplate(tp);
-            
-            bool found = false;
-            for(auto& t: templates){
-                if(t.name == tmpl.name){
-                    found = true;
-                    break;
-                }
-            }
-
-            if(!found)
-                templates.push_back(tmpl);
-        }
-
-        for(auto& tp: templs_p){
-            auto tmpls = fd::load_project_templates(tp);
+        for(auto& tp: templs){
+            auto tmpls = fd::ProjectTemplate::load(tp);
             
             for(auto& tmpl: tmpls){
                 bool found = false;
@@ -149,7 +119,7 @@ int main(int argc, char** argv){
                 dtk::log::fatal_error("Template not found \"" + templ + "\".", 83); //ELOAD
 
             //Build files
-            ft::build_template(name, used_templ.compile(name, build, true));
+            ft::build_template(used_templ.compile(name, build, true));
         }
     } else if(STRCMP_EQ(task, "info")){
         //Load project data, validate and output them
@@ -266,12 +236,7 @@ int main(int argc, char** argv){
                 if(++i >= argc)
                     dtk::log::fatal_error("Excepted argument after '-T'.", 83); //ELOAD
 
-                templates.emplace_back(argv[i]);
-            } else if(STRCMP_EQ(argv[i], "-C") || STRCMP_EQ(argv[i], "--template-colection-file")){ //Add a templates, return an error if there is a syntax error
-                if(++i >= argc)
-                    dtk::log::fatal_error("Excepted argument after '-C'.", 83); //ELOAD
-
-                auto tmpls = fd::load_project_templates(argv[i]); //Load templates
+                auto tmpls = fd::ProjectTemplate::load(argv[i]); //Load templates
 
                 for(auto& tmpl: tmpls)
                     templates.push_back(tmpl);
@@ -325,7 +290,7 @@ int main(int argc, char** argv){
             dtk::log::fatal_error("Template has not been specified.", 83); //ELOAD
         
         //Load templates
-        auto templates = fd::load_project_templates(".project/templates");
+        auto templates = fd::ProjectTemplate::load(".project/templates");
 
         //Choose template
         fd::ProjectTemplate& used_templ = templates[0];
@@ -343,16 +308,12 @@ int main(int argc, char** argv){
         if(!found)
             dtk::log::fatal_error("Template not found \"" + tmpl + "\".", 83); //ELOAD
 
-        //Build files
-        ft::build_template(name, used_templ.compile(name, project.build));
-    } else if(STRCMP_EQ(task, "test")){
-        auto templates = fd::ProjectTemplate2::load("test/templates/c.2.txt");
-        auto compiled = templates[0].compile("NAZWA", pr::PROJECT_BUILD_BASH);
-        for(auto& f: compiled.files){
-            std::cout << f.name << std::endl;
-            std::cout << f.cnt << std::endl;
-            std::cout << std::endl;
-        }
+        //Build module
+        ft::build_template(used_templ.compile(name, project.build));
+
+        //Add module to project
+        ft::update_modules_file(".project/modules", used_templ);
+        ft::update_make_script(".scripts/make.sh", ".project/modules");
     } else{
         dtk::log::fatal_error(std::string("Invalid task name \"") + task + "\"", 130); //ENOEXEC
     }

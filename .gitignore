@@ -1,0 +1,11 @@
+bin
+includes
+lib
+
+liblog/liblog.a
+liblog/liblog.so
+
+project/project
+
+test/bash*
+test/make*

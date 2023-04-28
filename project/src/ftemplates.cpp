@@ -29,7 +29,7 @@ namespace ftemplates{
 
         //Create .project/project file
         std::ofstream project(name + "/.project/project");
-        FILE_OK(project)
+        FILE_OK(project);
         
         project << "#Name: " << name << std::endl;
         project << "#Type: " << t << std::endl;
@@ -40,9 +40,9 @@ namespace ftemplates{
         //Create .project/templates file (with no data)
         CREATE_FILE(name + "/.project/templates");
 
-        //Create scripts (and .project/solutions file in non-fast case)
+        //Create scripts (and .project/modules file in non-fast case)
         if(!fast){
-            CREATE_FILE(name + "/.project/solutions");
+            CREATE_FILE(name + "/.project/modules");
 
             CREATE_SCRIPT(name + "/.scripts/clean.sh");
             CREATE_SCRIPT(name + "/.scripts/make.sh");
@@ -138,9 +138,13 @@ namespace ftemplates{
         run.close();
     }
 
+    void update_make_script(const std::string& p, const std::string& modules){
+        //TODO!!!update_make_script
+    }
+
     void update_templates_file(const std::string& p, const std::vector<fdata::ProjectTemplate>& templates){
         //Get already added templates
-        auto added = fdata::load_project_templates(p);
+        auto added = fdata::ProjectTemplate::load(p);
         
         //Strore seen names
         std::vector<std::string> names;
@@ -164,10 +168,8 @@ namespace ftemplates{
             if(!found){
                 names.push_back(tmpl.name);
 
-                templates_file << "#Begin" << std::endl;
-                templates_file << tmpl.to_string();
-                templates_file << "#End" << std::endl;
-                templates_file << std::endl;
+                templates_file << "Temaplate: " << tmpl.name << std::endl;
+                templates_file << tmpl.to_string() << std::endl;
             }
         }
 
@@ -186,10 +188,8 @@ namespace ftemplates{
             if(!found){
                 names.push_back(tmpl.name);
 
-                templates_file << "#Begin" << std::endl;
-                templates_file << tmpl.to_string();
-                templates_file << "#End" << std::endl;
-                templates_file << std::endl;
+                templates_file << "Template: " << tmpl.name << std::endl;
+                templates_file << tmpl.to_string() << std::endl;
             }
         }
 
@@ -197,20 +197,23 @@ namespace ftemplates{
         templates_file.close();
     }
 
-    void build_template(const std::string& name, const fdata::ProjectSrc& t){
-        //Create directories
-        for(auto& dir: t.directories){
-            CREATE_DIR(dir);
-        }
+    void update_modules_file(const std::string& p, const fdata::ProjectTemplate& tmpl){
+        //TODO!!!update_modules_file
+    }
 
+    void build_template(const fdata::ProjectCompiledTemplate& t){
+        //Created directories
+        for(auto& d: t.dirs)
+            CREATE_DIR(d);
+        
         //Create files
-        for(auto& file: t.files){
-            std::ofstream f(file.first);
-            FILE_OK(f);
+        for(auto& f: t.files){
+            std::ofstream file(f.name);
+            FILE_OK(file);
 
-            f << file.second;
+            file << f.cnt;
 
-            f.close();
+            file.close();
         }
     }
 }

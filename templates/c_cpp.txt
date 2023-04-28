@@ -1,16 +1,16 @@
 <template>
-    !name: c
+    !name: c/cpp
     !dir: bin
     !dir: src
     !dir: headers
     !ebin: <$name>
     <file>
-        !name: src/main.c
+        !name: src/main.cpp
         <cnt>
-            '#include <stdio.h>
+            '#include <iostream>
             '
             'int main(int argc, char** argv){
-            '    printf("Hello World!\n");
+            '    std::cout << "Hello World!" << std::endl;
             '    return 0;
             '}
         </cnt>
@@ -19,6 +19,11 @@
         !dir: bin
     </clean>
     <rule>
+        !in: src/<*>.cpp
+        !out: bin/<*>.cpp.o
+        !exe: g++ -c -o <$out> <$in> <$includes>
+    </rule>
+    <rule>
         !in: src/<*>.c
         !out: bin/<*>.c.o
         !exe: gcc -c -o <$out> <$in> <$includes>
@@ -26,6 +31,6 @@
     <link>
         !in: bin/<*>.o
         !out: <$name>
-        !exe: gcc -o <$out> <$in> <$libs>
+        !exe: g++ -o <$out> <$in> <$libs>
     </link>
 </template>
