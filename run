@@ -5,10 +5,23 @@ rm -f bin/*
 rm -f lib/*
 rm -f includes/*
 
-#liblog
-make -C liblog
-cp liblog/liblog.a lib/liblog.a
-cp liblog/headers/liblog.hpp includes/liblog.hpp
+#log
+make -C log
+cp log/log.so lib/log.so
+cp log/liblog.a lib/liblog.a
+cp log/headers/log.hpp includes/log.hpp
+
+#common
+make -C common
+cp common/common.so lib/common.so
+cp common/libcommon.a lib/libcommon.a
+cp common/headers/common.hpp includes/common.hpp
+
+#DataStructure
+make -C DataStructure
+cp DataStructure/dtkds.so lib/dtkds.so
+cp DataStructure/libdtkds.a lib/libdtkds.a
+#cp DataStructure/headers/dthds.h includes/dtkds.h
 
 #project
 make -C project

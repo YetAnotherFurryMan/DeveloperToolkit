@@ -5,7 +5,7 @@
 
 #include <common.hpp>
 
-#include <liblog.hpp>
+#include <log.hpp>
 
 namespace fdata{
     ProjectFile::ProjectFile(const std::string& path){
@@ -19,7 +19,7 @@ namespace fdata{
         //Open the project file
         std::ifstream project(path);
         if(!project.good())
-            dtk::log::error("Failed to open project file.", 83); //ELOAD
+            dtk::log::error("Failed to open project file.", 111); //EACCES
 
         //Read the file line-by-line
         std::string line;
@@ -79,7 +79,7 @@ namespace fdata{
         //Update the project file
         std::ofstream project(path);
         if(!project.good())
-            dtk::log::error("Failed to open project file.", 83); //ELOAD
+            dtk::log::error("Failed to open project file.", 111); //EACCES
         
         project << "#Name: " << name << std::endl;
         project << "#Type: " << type << std::endl;
@@ -87,16 +87,6 @@ namespace fdata{
         project << "#Enable: " << enabled << std::endl;
 
         project.close();
-    }
-
-    void str_cleanBegining(std::string& s){
-        //remove spacies and tabs from line begining
-        int x = 0;
-
-        while(s[x] == ' ' || s[x] == '\t')
-            x++;
-            
-        s = s.substr(x);
     }
 
     std::vector<ProjectTemplate> ProjectTemplate::load(const std::string& p){
@@ -108,7 +98,7 @@ namespace fdata{
         
         std::string line;
         while(getline(file, line)){
-            str_cleanBegining(line);
+            dtk::common::str::clean_beginning(line);
 
             if(line.empty())
                 continue; //nothing to do
@@ -123,13 +113,12 @@ namespace fdata{
                     bool template_end = false;
 
                     while(getline(file, line)){
-                        str_cleanBegining(line);
+                        dtk::common::str::clean_beginning(line);
 
                         if(line.empty())
                             continue; //nothing to do
                         
-                        if(line[0] == '<'){ //Load section
-                            //Switch section
+                        if(line[0] == '<'){ //Section
                             if(line.starts_with("</template>")){ //End of template section
                                 template_end = true;
                                 break;
@@ -141,7 +130,7 @@ namespace fdata{
                                 bool file_end = false;
 
                                 while(getline(file, line)){
-                                    str_cleanBegining(line);
+                                    dtk::common::str::clean_beginning(line);
 
                                     if(line.empty())
                                         continue; //nothing to do
@@ -156,7 +145,7 @@ namespace fdata{
                                             bool cnt_end = false;
 
                                             while(getline(file, line)){
-                                                str_cleanBegining(line);
+                                                dtk::common::str::clean_beginning(line);
 
                                                 if(line.empty())
                                                     continue; //Nothing to do
@@ -187,7 +176,7 @@ namespace fdata{
 
                                         std::string attribute = line.substr(1, colon - 1);
                                         std::string value = line.substr(colon + 1);
-                                        str_cleanBegining(value);
+                                        dtk::common::str::clean_beginning(value);
 
                                         //Switch attribute
                                         if(attribute == "name"){
@@ -224,7 +213,7 @@ namespace fdata{
                                 bool rule_end = false;
 
                                 while(getline(file, line)){
-                                    str_cleanBegining(line);
+                                    dtk::common::str::clean_beginning(line);
 
                                     if(line.empty())
                                         continue; //nothing to do
@@ -244,7 +233,7 @@ namespace fdata{
 
                                         std::string attribute = line.substr(1, colon - 1);
                                         std::string value = line.substr(colon + 1);
-                                        str_cleanBegining(value);
+                                        dtk::common::str::clean_beginning(value);
 
                                         //Switch attribute
                                         if(attribute == "in"){
@@ -294,7 +283,7 @@ namespace fdata{
                                 bool link_end = false;
 
                                 while(getline(file, line)){
-                                    str_cleanBegining(line);
+                                    dtk::common::str::clean_beginning(line);
 
                                     if(line.empty())
                                         continue; //nothing to do
@@ -314,7 +303,7 @@ namespace fdata{
 
                                         std::string attribute = line.substr(1, colon - 1);
                                         std::string value = line.substr(colon + 1);
-                                        str_cleanBegining(value);
+                                        dtk::common::str::clean_beginning(value);
 
                                         //Switch attribute
                                         if(attribute == "in"){
@@ -359,7 +348,7 @@ namespace fdata{
                                 bool clean_end = false;
 
                                 while(getline(file, line)){
-                                    str_cleanBegining(line);
+                                    dtk::common::str::clean_beginning(line);
 
                                     if(line.empty())
                                         continue; //nothing to do
@@ -379,7 +368,7 @@ namespace fdata{
 
                                         std::string attribute = line.substr(1, colon - 1);
                                         std::string value = line.substr(colon + 1);
-                                        str_cleanBegining(value);
+                                        dtk::common::str::clean_beginning(value);
 
                                         //Switch attribute
                                         if(attribute == "dir"){
@@ -401,15 +390,14 @@ namespace fdata{
                             } else{
                                 dtk::log::error("Template internal error: Unknown section name.", 83); //ELOAD
                             }
-                        } else if(line[0] == '!'){ //Load attribute
-                            //Get attribute name and value
+                        } else if(line[0] == '!'){ //Attribute
                             auto colon = line.find(':');
                             if(colon == std::string::npos)
                                 dtk::log::error("Template internal error: Attribute syntax error - colon not found.", 83); //ELOAD
 
                             std::string attribute = line.substr(1, colon - 1);
                             std::string value = line.substr(colon + 1);
-                            str_cleanBegining(value);
+                            dtk::common::str::clean_beginning(value);
                             
                             //Switch attribute
                             if(attribute == "name"){ //Load name
@@ -541,10 +529,10 @@ namespace fdata{
                                      const std::string& out,
                                      const std::string& star
                     ){
-        common::str_replase_all(s, "<$in>", in);
-        common::str_replase_all(s, "<$out>", out);
+        dtk::common::str::replase_all(s, "<$in>", in);
+        dtk::common::str::replase_all(s, "<$out>", out);
 
-        common::str_replase_all(s, "<*>", star);
+        dtk::common::str::replase_all(s, "<*>", star);
     }
 
     void postprocess(std::string& s, const std::string& name,
@@ -552,14 +540,14 @@ namespace fdata{
                                      const std::string& libs,
                                      const std::string& build
                     ){
-        common::str_replase_all(s, "<$name>", name);
+        dtk::common::str::replase_all(s, "<$name>", name);
 
-        common::str_replase_all(s, "<$includes>", includes);
-        common::str_replase_all(s, "<$libs>", libs);
-        common::str_replase_all(s, "<$build>", build);
+        dtk::common::str::replase_all(s, "<$includes>", includes);
+        dtk::common::str::replase_all(s, "<$libs>", libs);
+        dtk::common::str::replase_all(s, "<$build>", build);
 
-        common::str_replase_all(s, "<$lt>", "<");
-        common::str_replase_all(s, "<$gt>", ">");
+        dtk::common::str::replase_all(s, "<$lt>", "<");
+        dtk::common::str::replase_all(s, "<$gt>", ">");
     }
 
     ProjectCompiledTemplate ProjectTemplate::compile(const std::string& name, project::build b, bool fast) const{
@@ -708,7 +696,7 @@ namespace fdata{
                 //Calculating out varible
                 auto out = r.out;
                 auto star = r.in.find("<*>");
-                common::str_replase_all(out, "<*>", std::string("${file#\"") + r.in.substr(0, star) + "\"};out=${out%\"" + r.in.substr(star + 3) + "\"}");
+                dtk::common::str::replase_all(out, "<*>", std::string("${file#\"") + r.in.substr(0, star) + "\"};out=${out%\"" + r.in.substr(star + 3) + "\"}");
                 build << "\t\tout=" << out << std::endl;
 
                 for(auto e: r.exes){
@@ -758,5 +746,138 @@ namespace fdata{
         }
 
         return c;
+    }
+
+    ProjectModule ProjectTemplate::get_module(const std::string& name, project::build b) const{
+        ProjectModule m;
+        m.name = name;
+        m.tmpl_name = this->name;
+
+        for(auto e: exports){
+            postprocess(e.name, name, "", "", std::to_string(b));
+            m.exports.push_back(e);
+        }
+
+        return m;
+    }
+
+    ProjectModulesFile::ProjectModulesFile(const std::string& path){
+        this->path = path;
+
+        //Open modules file
+        std::ifstream file(path);
+        if(!file.good())
+            dtk::log::error("Failed to open modules file.", 111); //EACCES
+        
+        std::string line;
+        while(getline(file, line)){
+            dtk::common::str::clean_beginning(line);
+
+            if(line.empty())
+                continue; //nothing to do
+            
+            if(line[0] == '<'){
+                if(line.starts_with("<module>")){ //Section (error unexcepted section if not <module>)
+                    ProjectModule m;
+
+                    bool name_set = false;
+                    bool template_set = false;
+                    bool module_end = false;
+
+                    while(getline(file, line)){
+                        dtk::common::str::clean_beginning(line);
+
+                        if(line.empty())
+                            continue; //nothing to do
+                        
+                        if(line[0] == '<'){ //Section
+                            if(line.starts_with("</module>")){
+                                module_end = true;
+                                break;
+                            } else{
+                                dtk::log::error("Modules file internal error: Unexcepted section.", 83); //ELOAD
+                            }
+                        } else if(line[0] == '!'){ //Attribute
+                            auto colon = line.find(':');
+                            if(colon == std::string::npos)
+                                dtk::log::error("Modules file internal error: Attribute syntax error - colon not found.", 83); //ELOAD
+
+                            std::string attribute = line.substr(1, colon - 1);
+                            std::string value = line.substr(colon + 1);
+                            dtk::common::str::clean_beginning(value);
+                            
+                            //Switch attribute
+                            if(attribute == "name"){ //Load name
+                                if(name_set)
+                                    dtk::log::error("Modules file internal error: Duplicated name.", 83); //ELOAD
+                                
+                                name_set = true;
+                                m.name = value;
+                            } else if(attribute == "ebin"){ //Load export binary
+                                m.exports.emplace_back(value, project::PROJECT_EXPORT_BIN);
+                            } else if(attribute == "elib"){ //Load export lib
+                                m.exports.emplace_back(value, project::PROJECT_EXPORT_LIB);
+                            } else if(attribute == "einc"){ //Load export include
+                                m.exports.emplace_back(value, project::PROJECT_EXPORT_INCLUDE);
+                            } else{
+                                dtk::log::error("Modules file internal error: Unknown attribute.", 83); //ELOAD
+                            }
+                        }
+                    }
+
+                    if(!module_end)
+                        dtk::log::error("Modules file internal error: Missing <module> section end.", 83); //ELOAD
+                    
+                    if(!name_set)
+                        dtk::log::error("Modules file internal error: Missing <module> name attribute.", 83); //ELOAD
+                    
+                    if(!template_set)
+                        dtk::log::error("Modules file internal error: Missing <module> template attribute.", 83); //ELOAD
+                    
+                    modules.push_back(m);
+                } else{
+                    dtk::log::error("Modules file internal error: Unexcepted section.", 83); //ELOAD
+                }
+            } else if(line[0] == '!'){ //Attribute (error unexceptrd attribute)
+                dtk::log::error("Modules file internal error: Unexcepted attribute.", 83); //ELOAD
+            }
+        }
+
+        file.close();
+    }
+
+    void ProjectModulesFile::update(){
+        //Open modules file
+        std::ofstream file(path);
+        if(!file.good())
+            dtk::log::error("Failed to open modules file.", 111); //EACCES
+        
+        for(auto& m: modules){
+            file << "Module: " << m.name << std::endl;
+            file << "<module>" << std::endl;
+            file << "\t!name: " << m.name << std::endl;
+            file << "\t!template: " << m.tmpl_name << std::endl;
+
+            for(auto& e: m.exports){
+                switch(e.type){
+                    case project::PROJECT_EXPORT_BIN:
+                        file << "\t!ebin: ";
+                        break;
+                    case project::PROJECT_EXPORT_LIB:
+                        file << "\t!elib: ";
+                        break;
+                    case project::PROJECT_EXPORT_INCLUDE:
+                        file << "\t!einc: ";
+                        break;
+                }
+
+                file << e.name << std::endl;
+            }
+
+            file << "</module>" << std::endl;
+            file << std::endl;
+        }
+
+        file.close();
     }
 }

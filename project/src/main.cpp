@@ -5,7 +5,7 @@
 
 #define STRCMP_EQ(a, b) std::strcmp(a, b) == 0
 
-#include <liblog.hpp>
+#include <log.hpp>
 
 #include <defs.hpp>
 #include <fdata.hpp>
@@ -312,8 +312,12 @@ int main(int argc, char** argv){
         ft::build_template(used_templ.compile(name, project.build));
 
         //Add module to project
-        ft::update_modules_file(".project/modules", used_templ);
-        ft::update_make_script(".scripts/make.sh", ".project/modules");
+        fd::ProjectModulesFile modules(".project/modules");
+        modules.modules.push_back(used_templ.get_module(name, project.build));
+        modules.update();
+
+        //Update make.sh
+        ft::update_make_script(".scripts/make.sh", modules, project.build);
     } else{
         dtk::log::fatal_error(std::string("Invalid task name \"") + task + "\"", 130); //ENOEXEC
     }

@@ -3,14 +3,7 @@
 #include <filesystem>
 #include <fstream>
 
-#include <liblog.hpp>
-
-namespace fs = std::filesystem;
-
-#define CREATE_DIR(name) if(!fs::create_directory(name)) dtk::log::error("Failed to create directory.", 111); //EACCES
-#define CREATE_FILE(name) { std::ofstream file(name); if(!file.good()) dtk::log::error("Failed to create file.", 111); /*EACCES*/ file.close(); }
-#define CREATE_SCRIPT(name) { std::ofstream file(name); if(!file.good()) dtk::log::error("Failed to create script file.", 111); /*EACCES*/ file << "#!/bin/bash" << std::endl; file.close(); }
-#define FILE_OK(var) if(!var.good()) dtk::log::error("Failed to open file.", 111); //EACCES
+#include <macros.hpp>
 
 namespace ftemplates{
     void create_project(const std::string& name, project::type t, project::build b){
@@ -22,6 +15,7 @@ namespace ftemplates{
         CREATE_DIR(name + "/.scripts");
 
         if(!fast){
+            CREATE_DIR(name + "/res");
             CREATE_DIR(name + "/include");
             CREATE_DIR(name + "/lib");
             CREATE_DIR(name + "/bin");
@@ -138,8 +132,62 @@ namespace ftemplates{
         run.close();
     }
 
-    void update_make_script(const std::string& p, const std::string& modules){
-        //TODO!!!update_make_script
+    void update_make_script(const std::string& p, const fdata::ProjectModulesFile& modules, project::build b){
+        //Open make.sh
+        std::ofstream make(p);
+        FILE_OK(make);
+
+        make << "#!/bin/bash" << std::endl;
+        make << std::endl;
+
+        //Clean
+        make << "#Clean" << std::endl;
+        make << "rm -fr bin/* 2> /dev/null" << std::endl;
+        make << "rm -fr lib/* 2> /dev/null" << std::endl;
+        make << "rm -fr includes/* 2> /dev/null" << std::endl;
+        make << "rm -fr res/* 2> /dev/null" << std::endl;
+        make << std::endl;
+
+        //Modules
+        for(auto& m: modules.modules){
+            make << "#" << m.name << std::endl;
+
+            //Make module
+            switch(b){
+                case project::PROJECT_BUILD_MAKE:
+                    make << "make -C " << m.name << std::endl;
+                    break;
+                case project::PROJECT_BUILD_BASH:
+                    make << "cd " << m.name << std::endl;
+                    make << "./make.sh" << std::endl;
+                    make << "cd .." << std::endl;
+                    break;
+            }
+
+            //Export files
+            for(auto& e: m.exports){
+                make << "cp " << m.name << "/" << e.name;
+
+                switch(e.type){
+                    case project::PROJECT_EXPORT_BIN:
+                        make << " bin/";
+                        break;
+                    case project::PROJECT_EXPORT_LIB:
+                        make << " lib/";
+                        break;
+                    case project::PROJECT_EXPORT_INCLUDE:
+                        make << " includes/";
+                        break;
+                    case project::PROJECT_EXPORT_RES:
+                        make << " res/";
+                        break;
+                }
+
+                make << e.name << std::endl;
+            }
+        }
+
+        make.close();
     }
 
     void update_templates_file(const std::string& p, const std::vector<fdata::ProjectTemplate>& templates){
@@ -195,10 +243,6 @@ namespace ftemplates{
 
         //Close the file
         templates_file.close();
-    }
-
-    void update_modules_file(const std::string& p, const fdata::ProjectTemplate& tmpl){
-        //TODO!!!update_modules_file
     }
 
     void build_template(const fdata::ProjectCompiledTemplate& t){

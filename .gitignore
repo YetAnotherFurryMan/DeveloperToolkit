@@ -2,8 +2,15 @@ bin
 includes
 lib
 
-liblog/liblog.a
-liblog/liblog.so
+common/*.so
+common/*.a
+
+DataStructure/*.so
+DataStructure/*.a
+DataStructure/test/test
+
+log/*.a
+log/*.so
 
 project/project
 

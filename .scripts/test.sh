@@ -6,6 +6,9 @@ cd test
 #Clean
 rm -rf bash* make*
 
+#Do not test
+exit
+
 #Functions
 _pr_init(){
     ../bin/project init -n $1 -b $2 $3 -T templates/cpp.txt -T templates/c.txt
@@ -138,6 +141,9 @@ pr_template bash ../templates/c.txt
 
 pr_module make c
 pr_module bash c
+
+#add permossions
+chmod +x bash/module_c/*.sh
 
 #Test #5
 

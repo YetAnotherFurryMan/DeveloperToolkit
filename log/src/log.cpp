@@ -1,4 +1,4 @@
-#include "../headers/liblog.hpp"
+#include "../headers/log.hpp"
 
 #include <iostream>
 

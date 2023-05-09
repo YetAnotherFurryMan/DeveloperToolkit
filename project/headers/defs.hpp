@@ -17,14 +17,9 @@ namespace project{
     } enable;
 
     typedef enum{
-        PROJECT_EXTERN_BIN,
-        PROJECT_EXTERN_LIB,
-        PROJECT_EXTERN_INCLUDE
-    } extern_type;
-
-    typedef enum{
         PROJECT_EXPORT_BIN,
         PROJECT_EXPORT_LIB,
-        PROJECT_EXPORT_INCLUDE
+        PROJECT_EXPORT_INCLUDE,
+        PROJECT_EXPORT_RES
     } export_type;
 }

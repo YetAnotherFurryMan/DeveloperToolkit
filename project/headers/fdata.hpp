@@ -45,6 +45,12 @@ namespace fdata{
         std::vector<std::string> exes;
     };
 
+    struct ProjectModule{
+        std::string name;
+        std::string tmpl_name;
+        std::vector<ProjectTemplateExport> exports;
+    };
+
     struct ProjectTemplate{
         std::string name;
 
@@ -60,5 +66,15 @@ namespace fdata{
 
         std::string to_string() const;
         ProjectCompiledTemplate compile(const std::string& name, project::build b, bool fast = false) const;
+        ProjectModule get_module(const std::string& name, project::build b) const;
+    };
+
+    struct ProjectModulesFile{
+        std::vector<ProjectModule> modules;
+
+        std::string path;
+
+        ProjectModulesFile(const std::string& path);
+        void update();
     };
 }

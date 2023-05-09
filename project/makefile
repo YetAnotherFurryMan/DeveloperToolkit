@@ -1,6 +1,6 @@
 name := project
 
-libs := -llog
+libs := -llog -lcommon
 
 bin := $(patsubst src/%,bin/%.o,$(wildcard src/*))
 
