@@ -3,79 +3,46 @@
 #include <malloc.h>
 #include <string.h>
 
-char* ds_put_definition(struct DSAttribute* d, char* str){
-    size_t leng = strlen(str);
-    leng += 1 + strlen(d->name) + 1; //#{name}\n
-    if(d->value)
-        leng += 1 + strlen(d->value) + 1; //="{value}" --only if value exists
-    
-    str = realloc(str, leng);
+char* ds_put(struct DSAttribute* d, char* str, char* prefix, char initializer, char* equalizer, char* terminator){
+    size_t _begin_leng = strlen(prefix) + 1 + strlen(d->name); //{prefix}{initializer}{name}
+    char* _begin = malloc(_begin_leng + 1);
+    sprintf(_begin, "%s%c%s", prefix, initializer, d->name);
 
-    strcat(str, "#");
-    strcat(str, d->name);
-
+    size_t _value_leng = 0;
+    char* _value = 0;
     if(d->value){
-        strcat(str, "=\"");
-        strcat(str, d->value);
-        strcat(str, "\"");
+        _value_leng = strlen(equalizer) + 1 + strlen(d->value) + 1; //{equalizer}"{value}"
+        _value = malloc(_value_leng + 1);
+        sprintf(_value, "%s\"%s\"", equalizer, d->value);
     }
 
-    strcat(str, "\n");
+    size_t _terminator_leng = strlen(terminator);
+
+    str = realloc(str, strlen(str) + _begin_leng + _value_leng + _terminator_leng);
+
+    strcat(str, _begin);
+
+    if(_value_leng)
+        strcat(str, _value);
+    
+    if(_terminator_leng)
+        strcat(str, terminator);
+    
+    free(_begin);
+    free(_value);
 
     return str;
 }
 
-char* ds_put_varible(struct DSAttribute* v, char* str){
-    size_t leng = strlen(str);
-    leng += 1 + strlen(v->name) + 3 + strlen(v->value) + 2; //#{name}: "{value}"\n
-
-    str = realloc(str, leng);
-
-    strcat(str, "#");
-    strcat(str, v->name);
-    strcat(str, ": \"");
-    strcat(str, v->value);
-    strcat(str, "\"\n");
-
-    return str;
-}
-
-char* ds_put_modifier(struct DSAttribute* m, char* str){
-    size_t leng = strlen(str);
-    leng += 1 + strlen(m->name) + 2 + strlen(m->value) + 1; // {name}="{value}"
-
-    str = realloc(str, leng);
-
-    strcat(str, " ");
-    strcat(str, m->name);
-    strcat(str, "=\"");
-    strcat(str, m->value);
-    strcat(str, "\"");
-
-    return str;
-}
-
-char* ds_put_attribute(struct DSAttribute* a, char* str, char* prefix){
-    size_t leng = strlen(str);
-    leng += strlen(prefix) + 1 + strlen(a->name) + 3 + strlen(a->value) + 2; //{prefix}!{name}: "{value}"\n
-
-    str = realloc(str, leng);
-
-    strcat(str, prefix);
-    strcat(str, "!");
-    strcat(str, a->name);
-    strcat(str, ": \"");
-    strcat(str, a->value);
-    strcat(str, "\"\n");
-
-    return str;
-}
+#define ds_put_definition(d, str, prefix) ds_put(d, str, prefix, '#', "=", "\n")
+#define ds_put_attribute(a, str, prefix) ds_put(a, str, prefix, '!', ": ", "\n")
+#define ds_put_modifier(m, str) ds_put(m, str, "", ' ', "=", "")
 
 char* ds_put_value(char* v, char* str, char* prefix){
     size_t leng = strlen(str);
     leng += strlen(prefix) + 1 + strlen(v) + 2; // {prefix}"{value}"\n
 
-    str = realloc(str, leng);
+    str = realloc(str, leng + 1);
 
     strcat(str, prefix);
     strcat(str, "\"");
@@ -86,71 +53,71 @@ char* ds_put_value(char* v, char* str, char* prefix){
 }
 
 char* ds_put_section(struct DSSection* s, char* str, char* prefix){
-    size_t prefix_leng = strlen(prefix);
+    size_t _prefix_leng = strlen(prefix);
+    size_t _name_leng = strlen(s->name);
 
-    //Section begin
-    size_t leng = strlen(str);
-    leng += prefix_leng + 1 + strlen(s->name); //{prefix}<{name}
-    str = realloc(str, leng);
+    //modifiers
+    char* _modifiers = malloc(1);
+    _modifiers[0] = 0;
 
-    strcat(str, prefix);
-    strcat(str, "<");
-    strcat(str, s->name);
-    
-    //Put modifiers
     for(int i = 0; i < s->modifier_no; i++)
-        str = ds_put_modifier(s->modifiers[i], str);
+        _modifiers = ds_put_modifier(s->modifiers[i], _modifiers);
+    
+    //section begin
+    char* _begin = malloc(_prefix_leng + 1 + _name_leng + strlen(_modifiers) + 3); //{prefix}<{name}{_modifiers}>\n\0
+    sprintf(_begin, "%s<%s%s>\n", prefix, s->name, _modifiers);
 
-    //End of modifiers
-    leng = strlen(str);
-    leng += 2; //>\n
-    str = realloc(str, leng);
-    strcat(str, ">\n");
+    free(_modifiers);
 
-    //New prefix
-    char* _prefix = malloc(prefix_leng + 2);
-    strcpy(_prefix, prefix);
-    strcat(_prefix, "\t");
+    //new prefix
+    char* _prefix = malloc(_prefix_leng + 2);
+    sprintf(_prefix, "%s\t", prefix);
 
-    //Put attributes
+    char* _cnt = malloc(1);
+    _cnt[0] = 0;
+
+    //put definitions
+    for(int i = 0; i < s->definition_no; i++)
+        _cnt = ds_put_definition(s->definitions[i], _cnt, _prefix);
+
+    //put attributes
     for(int i = 0; i < s->attribute_no; i++)
-        str = ds_put_attribute(s->attributes[i], str, _prefix);
+        _cnt = ds_put_attribute(s->attributes[i], _cnt, _prefix);
     
-    //Put sections
+    //put sections
     for(int i = 0; i < s->section_no; i++)
-        str = ds_put_section(s->sections[i], str, _prefix);
+        _cnt = ds_put_section(s->sections[i], _cnt, _prefix);
     
-    //Put values
+    //put values
     for(int i = 0; i < s->value_no; i++)
-        str = ds_put_value(s->values[i], str, _prefix);
+        _cnt = ds_put_value(s->values[i], _cnt, _prefix);
 
     free(_prefix);
 
-    //Section end
-    leng = strlen(str);
-    leng += prefix_leng + 2 + strlen(s->name) + 2; //{prefix}</{name}>\n
-    str = realloc(str, leng);
+    //section end
+    size_t _end_leng = _prefix_leng + 2 + _name_leng + 2; //{prefix}</{name}>\n
+    char* _end = malloc(_end_leng + 1);
+    sprintf(_end, "%s</%s>\n", prefix, s->name);
+    
+    str = realloc(str, strlen(str) + strlen(_begin) + strlen(_cnt) + _end_leng + 1); //{str}{_begin}{_cnt}{_end}\0
+    strcat(str, _begin);
+    strcat(str, _cnt);
+    strcat(str, _end);
 
-    strcat(str, prefix);
-    strcat(str, "</");
-    strcat(str, s->name);
-    strcat(str, ">\n");
+    free(_begin);
+    free(_cnt);
+    free(_end);
 
     return str;
 }
 
 char* ds_root_to_str(struct DSRoot* r){
     char* str = malloc(1);
-    size_t str_leng = 1;
     strcpy(str, "");
 
     //put definitions
     for(int i = 0; i < r->definition_no; i++)
-        str = ds_put_definition(r->definitions[i], str);
-
-    //put varibles
-    for(int i = 0; i < r->varible_no; i++)
-        str = ds_put_varible(r->varibles[i], str);
+        str = ds_put_definition(r->definitions[i], str, "");
     
     //put attributes
     for(int i = 0; i < r->attribute_no; i++)

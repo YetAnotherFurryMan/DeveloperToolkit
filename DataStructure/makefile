@@ -31,15 +31,17 @@ bin/%.c.o: src/%.c
 
 bin/%.l.c.o: src/%.l
 	@echo Compiling $^
-	@flex -o $^.c --header-file=headers/lexer.l.h --yylineno -f $^
+	@flex -o $^.c --header-file=headers/lexer.l.h --yylineno --prefix=ds_yy -f $^
 	@$(CC) -c -o $@ $^.c -fPIC
 
 bin/%.y.c.o: src/%.y
-	@echo Generating $@
+	@echo Compiling $@
 	@bison $^ -o $^.c --header=headers/parser.y.h -k
 	@$(CC) -c -o $@ $^.c -fPIC -I headers
 
 test/test: test/main.cpp
 	@echo Test 1
 	@$(CXX) -o $@ $^ -L . -ldtkds
-	@./$@
+	@./$@ $@.dtk $@.1.out.dtk
+	@./$@ $@.1.out.dtk $@.2.out.dtk
+	@if cmp -s "$@.1.out.dtk" "$@.2.out.dtk"; then echo "Passed"; else echo "Failed"; fi

@@ -7,8 +7,9 @@
     #include "../headers/DTKDS.h"
     #include "../headers/parser.y.h"
 
-    void yyerror(char* msg, char* yytext, int yylineno);
-    #define yyerror(msg) yyerror(msg, yytext, yylineno)
+    void ds_yyerror(char* msg, char* yytext, int yylineno);
+    #define yyerror(msg) ds_yyerror(msg, yytext, yylineno)
+    #define yylval ds_yylval
 
     #define yybegin(x) BEGIN x
 
@@ -48,6 +49,7 @@ hex [0-9a-fA-F]{2}
 <VALUE>[^\\"]+ { puts_value(yytext); }
 <VALUE>\\\" { putc_value('\"'); }
 <VALUE>\\\\ { putc_value('\\'); }
+<VALUE>\\n { putc_value('\n'); }
 <VALUE>\\(x|X){hex} {
                         int temp = 0;
                         for(int i = 2; i > 0; i--){
@@ -70,7 +72,6 @@ hex [0-9a-fA-F]{2}
                              }
                              putc_value((char)temp);
                          }
-<VALUE>\\n { putc_value('\n'); }
 <VALUE><<EOF>> { yyerror("Lexical error: Unexpected EOF."); free(value); yybegin(INITIAL); }
 <VALUE>\" { push_value(); yybegin(INITIAL); return TK_VALUE; }
 
@@ -81,12 +82,14 @@ hex [0-9a-fA-F]{2}
 \<\-\- { yybegin(COMMENT_A); }
 \<\!\-\- { yybegin(COMMENT_B); }
 
+<COMMENT_A>. { /*Skipp*/ }
+<COMMENT_A>\n { /*Skipp*/ }
 <COMMENT_A>\-\-\> { yybegin(INITIAL); }
 <COMMENT_A><<EOF>> { yyerror("Lexical error: Unexpected EOF."); yybegin(INITIAL); }
 
 <COMMENT_B>. { yymore(); }
 <COMMENT_B>\n { yymore(); }
-<COMMENT_B>\-\-\> { yytext[yyleng - 3] = 0; printf("COMMENT_B: %s\n", yytext); yybegin(INITIAL); }
+<COMMENT_B>\-\-\> { /*yytext[yyleng - 3] = 0; printf("COMMENT_B: %s\n", yytext); !!!TODO: doc gen*/ yybegin(INITIAL); }
 <COMMENT_B><<EOF>> { yyerror("Lexical error: Unexpected EOF."); yybegin(INITIAL); }
 
 [  \t\n\r] { /*Skipp*/ }
@@ -98,22 +101,21 @@ hex [0-9a-fA-F]{2}
 %%
 
 void init_value(){
-    value = malloc(1);
     value_leng = 1;
-    strcpy(value, "");
+    value = malloc(1);
+    value[0] = 0;
 }
 
 void putc_value(char c){
-    value[value_leng - 1] = c;
     value = realloc(value, ++value_leng);
+    value[value_leng - 2] = c;
     value[value_leng - 1] = 0;
 }
 
 void puts_value(char* s){
-    size_t l = strlen(s);
-    value = realloc(value, value_leng + l);
+    value_leng += strlen(s);
+    value = realloc(value, value_leng);
     strcat(value, s);
-    value_leng += l;
 }
 
 void push_value(){
