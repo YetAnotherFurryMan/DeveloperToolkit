@@ -1,16 +1,17 @@
 bin
-includes
 lib
+includes
+
+log/*.a
+log/*.so
 
 common/*.so
 common/*.a
 
-DataStructure/*.so
-DataStructure/*.a
-DataStructure/test/test
-
-log/*.a
-log/*.so
+ml/*.a
+ml/*.so
+ml/test/test
+ml/test/*.out.dtk
 
 project/project
 

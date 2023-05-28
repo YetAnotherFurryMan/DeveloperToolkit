@@ -7,9 +7,9 @@ A set of common functions and classes/structures for project.
 # 2.log
 Some logging function set. Still work-in-progress.
 
-# 3.DataStructure
-Well, XML - bad, JSON - bad, so I had wrote a lexer+tookenizer+parser for a new data structure!</br>
-This is used by <b>project</b> module for template-files reading and writting.
+# 3.ml
+Well, XML - bad, JSON - bad, so I had wrote a lexer+tookenizer+parser for a new markup language!</br>
+This is used by <b>project</b> module for template-files, module-files and config.
 
 # 4.project
 One of the "core" tools of this projest. </br>

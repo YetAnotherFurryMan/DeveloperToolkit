@@ -1,0 +1,39 @@
+!att_no_val1
+!att1: "attribute1"
+!att2: 'attribute2
+!att3="attribute3"
+!att4='attribute4
+
+#def_no_val1
+#def1: "definition1"
+#def2: 'definition2
+#def3="definition3"
+#def4='definition4
+
+<section1 mod1="modifier1" mod_no_val1>
+    !att_no_val2
+    !att5: "attribute5"
+    !att6: 'attribute6
+
+    #def_no_val2
+    #def5: "definition5"
+    #def6: 'definition6
+    <section2 mod2="modifier2" mod_no_val2>
+        !att_no_val3
+        !att7="attribute7"
+        !att8='attribute8
+
+        #def_no_val3
+        #def7="definition7"
+        #def8='definition8
+
+        'value1
+        "value2"
+    </section2>
+    <-- 
+        comment1 
+    -->
+    <!-- 
+        comment2 
+    -->
+</section1>
