@@ -26,7 +26,7 @@ int main(int argc, char** argv){
             output = argv[i];
         } else if(STRCMP_EQ(argv[i], "-xml")){
             format = OUTPUT_XML;
-        } else if(STRCMP_EQ(argv[i], "txt")){
+        } else if(STRCMP_EQ(argv[i], "-txt")){
             format = OUTPUT_TXT;
         } else{
             if(input)
