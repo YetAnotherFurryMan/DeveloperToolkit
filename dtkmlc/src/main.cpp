@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 
 #include <cstring>
 
@@ -6,6 +7,7 @@
 #include <ml.hpp>
 
 #include "../headers/def.hpp"
+#include "../headers/converters.hpp"
 
 int main(int argc, char** argv){
     char* input = 0;
@@ -63,9 +65,21 @@ int main(int argc, char** argv){
     //Close input file
     fclose(input_file);
 
-    //!!!TODO: dtk to txt
-    //!!!TODO: dtk to xml
-    //!!!TODO: dtk to html (+ css maybe)
+    //Create output
+    std::ofstream file(output);
+    if(!file.good())
+        dtk::log::fatal_error("Cannot open output file.", -1);
+
+    switch(format){
+        case OUTPUT_TXT:
+            ml_to_txt(file, root);
+            break;
+        case OUTPUT_XML:
+            dtk::log::info("Not supported yet.");
+            break;
+    }
+
+    file.close();
 
     //Free memory
     dtk::ml::ml_free_root(root);

@@ -3,7 +3,7 @@ name := ml
 bin := $(patsubst src/%,bin/%.c.o, $(wildcard src/*.y src/*.l)) $(patsubst src/%,bin/%.o, $(wildcard src/*.c))
 
 .PHONY: all
-all: clean dir $(name).so lib$(name).a test/test
+all: clean dir $(name).so lib$(name).a
 
 dir: bin
 
@@ -27,7 +27,7 @@ lib$(name).a: $(bin)
 
 bin/%.c.o: src/%.c
 	@echo Compiling $^
-	@$(CC) -c -o $@ $^ -fPIC
+	@$(CC) -c -o $@ $^ -fPIC -I ../includes
 
 bin/%.l.c.o: src/%.l
 	@echo Compiling $^
@@ -40,8 +40,8 @@ bin/%.y.c.o: src/%.y
 	@$(CC) -c -o $@ $^.c -fPIC -I headers
 
 test/test: test/main.cpp
-	@echo Test 1
-	@$(CXX) -o $@ $^ -L . -l$(name)
+	@echo Test ml
+	@$(CXX) -o $@ $^ -L . -l$(name) -L ../lib -lccommon
 	@./$@ $@.dtk $@.1.out.dtk
 	@./$@ $@.1.out.dtk $@.2.out.dtk
 	@if cmp -s "$@.1.out.dtk" "$@.2.out.dtk"; then echo "Passed"; else echo "Failed"; fi

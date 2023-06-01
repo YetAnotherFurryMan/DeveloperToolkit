@@ -3,6 +3,11 @@
 #include <string>
 
 namespace dtk::common{
+
+    extern "C"{
+        #include "common.h"
+    }
+
     namespace str{
         void replase(std::string& s, const std::string& from, const std::string& to);
         void replase_all(std::string& s, const std::string& from, const std::string& to);

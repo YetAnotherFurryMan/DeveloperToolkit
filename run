@@ -32,6 +32,10 @@ cp ml/libml.a lib/libml.a
 cp ml/headers/ml.h includes/ml.h
 cp ml/headers/ml.hpp includes/ml.hpp
 
+#dtkmlc
+make -C dtkmlc
+cp dtkmlc/dtkmlc bin/dtkmlc
+
 #project
 make -C project
 cp project/project bin/project

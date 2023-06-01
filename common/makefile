@@ -19,7 +19,7 @@ $(name).so: $(binpp)
 	@echo Creating $@
 	@$(CXX) -shared -o $@ $^ -std=c++2a -I headers -I ../includes
 
-lib$(name).a: $(binpp)
+lib$(name).a: $(binpp) $(binc)
 	@echo Creating $@
 	@ar crv $@ $^
 
