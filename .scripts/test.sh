@@ -4,9 +4,20 @@
 cd test
 
 #Clean
-rm -rf bash* make*
+rm -rf bash* make* *.out.*
 
-#Do not test
+#ml
+make test/test -C ../ml
+
+#dtkmlc
+_dtkmlc(){
+    ../bin/dtkmlc -$1 $2.dtk -o $2.out.$1
+}
+
+_dtkmlc txt test
+_dtkmlc xml test
+
+#Do not test project
 exit
 
 #Functions
