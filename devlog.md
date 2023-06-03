@@ -7,6 +7,7 @@
     <li>Added dtkmlc module (DTK Markup Language Compiler)</li>
     <li>Added support of txt files generation to dtkmlc</li>
     <li>Moved ml's test/test target make from make=>all to test.sh</li>
+    <li>Fixed README.md</li>
 </ol>
 
 # Todo:
