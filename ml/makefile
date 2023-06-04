@@ -41,7 +41,7 @@ bin/%.y.c.o: src/%.y
 
 test/test: test/main.cpp
 	@echo Test ml
-	@$(CXX) -o $@ $^ -L . -l$(name) -L ../lib -lccommon
+	@$(CXX) -o $@ $^ -L . -l$(name) -L ../lib
 	@./$@ $@.dtk $@.1.out.dtk
 	@./$@ $@.1.out.dtk $@.2.out.dtk
 	@if cmp -s "$@.1.out.dtk" "$@.2.out.dtk"; then echo "Passed"; else echo "Failed"; fi

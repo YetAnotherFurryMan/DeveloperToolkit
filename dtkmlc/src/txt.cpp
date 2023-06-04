@@ -2,12 +2,6 @@
 
 #include <sstream>
 
-#include <common.hpp>
-
-std::string att_to_txt(const dtk::ml::MLAttribute* a){
-    return std::string(a->name) + "=\"" + ((a->value)?(std::string(dtk::common::ml_format_str(a->value))):"") + "\"";
-}
-
 std::string sec_to_txt(const dtk::ml::MLSection* s, const std::string& prefix){
     std::stringstream ss;
     ss << prefix << s->name;
@@ -34,7 +28,7 @@ std::string sec_to_txt(const dtk::ml::MLSection* s, const std::string& prefix){
     
     //Write vals:
     for(size_t i = 0; i < s->value_no; i++)
-        ss << _prefix << "\"" << std::string(dtk::common::ml_format_str(s->values[i])) << "\"" << std::endl;
+        ss << _prefix << "\"" << std::string(dtk::ml::ml_format_str(s->values[i])) << "\"" << std::endl;
     
     return ss.str();
 }

@@ -8,6 +8,14 @@
     <li>Added support of txt files generation to dtkmlc</li>
     <li>Moved ml's test/test target make from make=>all to test.sh</li>
     <li>Fixed README.md</li>
+    <li>Seperated common (C version) and common++ (C++ version)</li>
+    <li>Extended dtk::common::str::CString</li>
+    <li>Renamed log => log++</li>
+    <li>Added log (C version of log++)</li>
+    <li>Deleted all the functions witch const char* argument from log++</li>
+    <li>Moved ml_format_str from common to ml</li>
+    <li>Removed 'exit' from .scripts/test.sh</li>
+    <li>Updated .gitignore</li>
 </ol>
 
 # Todo:
@@ -16,7 +24,4 @@
     <li>project using ml</li>
     <li>project keep track of used libs</li>
     <li>Add project export</li>
-    <li>Add log C version</li>
-    <li>Make common C version better (maybe seperate it)</li>
-    <li>Reorganize common headers</li>
 </ol>

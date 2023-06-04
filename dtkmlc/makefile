@@ -1,5 +1,8 @@
 name := dtkmlc
 
+libs := -L ../lib -llog++ -lml
+std := -std=c++2a
+
 bin := $(patsubst src/%,bin/%.o,$(wildcard src/*.cpp))
 
 .PHONY: all
@@ -17,8 +20,8 @@ clean:
 
 $(name): $(bin)
 	@echo Linking $(name)
-	@$(CXX) -o $@ $^ -L ../lib -llog -lml -lcommon -lccommon
+	@$(CXX) -o $@ $^ $(libs) $(std)
 
 bin/%.o:src/%
 	@echo Compiling $^
-	@$(CXX) -c -o $@ $^ -I ../includes
+	@$(CXX) -c -o $@ $^ -I ../includes $(std)

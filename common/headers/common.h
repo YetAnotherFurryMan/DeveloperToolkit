@@ -1,10 +1,16 @@
 #ifdef __cplusplus
-#include "common.hpp"
+namespace dtk::common{
+    extern "C"{
 #endif
 
 #ifndef _DTK_COMMON_H_
 #define _DTK_COMMON_H_
 
-char* ml_format_str(char* s);
+//Nothing yet
 
 #endif //_DTK_COMMON_H
+
+#ifdef __cplusplus
+    }
+}
+#endif

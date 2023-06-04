@@ -1,6 +1,8 @@
-name := common
+name := log++
 
-bin := $(patsubst src/%,bin/%.o,$(wildcard src/*.c))
+std := -std=c++2a
+
+bin := $(patsubst src/%,bin/%.o,$(wildcard src/*))
 
 all: clean dir $(name).so lib$(name).a
 
@@ -16,7 +18,7 @@ bin:
 
 $(name).so: $(bin)
 	@echo Creating $@
-	@$(LD) -shared -o $@ $^
+	@$(CXX) -shared -o $@ $^ $(std)
 
 lib$(name).a: $(bin)
 	@echo Creating $@
@@ -24,4 +26,4 @@ lib$(name).a: $(bin)
 
 $(bin):bin/%.o:src/%
 	@echo Compiling $^
-	@$(CC) -c -o $@ $^ -I headers -I ../includes -fPIC
+	@$(CXX) -c -o $@ $^ $(std) -I headers -I ../includes -fPIC

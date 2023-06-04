@@ -1,6 +1,7 @@
 name := project
 
-libs := -llog -lcommon
+libs := -llog++ -lcommon++
+std := -std=c++2a
 
 bin := $(patsubst src/%,bin/%.o,$(wildcard src/*))
 
@@ -18,8 +19,8 @@ bin:
 
 $(name): $(bin)
 	@echo Linking $(name)
-	@$(CXX) -o $@ $^ -L ../lib $(libs) -std=c++2a
+	@$(CXX) -o $@ $^ -L ../lib $(libs) $(std)
 
 $(bin):bin/%.o:src/%
 	@echo Compiling $^
-	@$(CXX) -c -o $@ $^ -std=c++2a -I headers -I ../includes
+	@$(CXX) -c -o $@ $^ $(std) -I headers -I ../includes

@@ -46,6 +46,8 @@ struct MLRoot* ml_load_file(FILE* f);
 char* ml_root_to_str(struct MLRoot* r);
 void ml_free_root(struct MLRoot* r);
 
+char* ml_format_str(char* s);
+
 #ifdef __cplusplus
     }
 }
