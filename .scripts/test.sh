@@ -18,7 +18,7 @@ _dtkmlc txt test
 _dtkmlc xml test
 
 #Do not test project
-exit
+#exit
 
 #Functions
 _pr_init(){
