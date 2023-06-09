@@ -17,6 +17,7 @@
     <li>Removed 'exit' from .scripts/test.sh</li>
     <li>Updated .gitignore</li>
     <li>project is using ml to interpret template files</li>
+    <li>Added dtk_str_copy(char*) to common
 </ol>
 
 # Todo:

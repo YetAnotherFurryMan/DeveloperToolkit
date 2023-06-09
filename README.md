@@ -4,7 +4,7 @@ A set of tools that (I wish to) help me in my programmer's poor life. Project cr
 ## 1.common
 A set of common functions and structures for C.
 <ol>
-  <p>Nothing fot now</p>
+  <li>common_str_copy(char* s) <br> returns a new-allocated char buffer with data from <i>s</i>, in other words: returns a copy of <i>s</i></li>
 </ol>
 
 ## 2.common
