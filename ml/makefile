@@ -32,16 +32,16 @@ bin/%.c.o: src/%.c
 bin/%.l.c.o: src/%.l
 	@echo Compiling $^
 	@flex -o $^.c --header-file=headers/lexer.l.h --yylineno --prefix=ml_yy -f $^
-	@$(CC) -c -o $@ $^.c -fPIC
+	@$(CC) -c -o $@ $^.c -fPIC -I ../includes
 
 bin/%.y.c.o: src/%.y
 	@echo Compiling $@
 	@bison $^ -o $^.c --defines=headers/parser.y.h -k
-	@$(CC) -c -o $@ $^.c -fPIC -I headers
+	@$(CC) -c -o $@ $^.c -fPIC -I headers -I ../includes
 
 test/test: test/main.cpp
 	@echo Test ml
-	@$(CXX) -o $@ $^ -L . -l$(name) -L ../lib
+	@$(CXX) -o $@ $^ -L . -l$(name) -L ../lib -llog
 	@./$@ $@.dtk $@.1.out.dtk
 	@./$@ $@.1.out.dtk $@.2.out.dtk
 	@if cmp -s "$@.1.out.dtk" "$@.2.out.dtk"; then echo "Passed"; else echo "Failed"; fi

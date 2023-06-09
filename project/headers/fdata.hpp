@@ -5,6 +5,8 @@
 
 #include "defs.hpp"
 
+#include <ml.hpp>
+
 namespace fdata{
     struct ProjectFile{
         std::string name;
@@ -61,6 +63,8 @@ namespace fdata{
         std::vector<ProjectTemplateExport> exports;
 
         ProjectTemplateCleanRule clean;
+
+        dtk::ml::MLSection* dtk;
 
         static std::vector<ProjectTemplate> load(const std::string& p);
 

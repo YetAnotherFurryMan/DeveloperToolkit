@@ -3,11 +3,12 @@
 
 #include <cstring>
 
-#define STRCMP_EQ(a, b) std::strcmp(a, b) == 0
+//#define STRCMP_EQ(a, b) std::strcmp(a, b) == 0
 
 #include <log.hpp>
 
 #include <defs.hpp>
+#include <macros.hpp>
 #include <fdata.hpp>
 #include <ftemplates.hpp>
 

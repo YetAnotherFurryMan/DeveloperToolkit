@@ -1,10 +1,16 @@
+#define DTK_ML_DTK_BUILDER
+#define DTK_ML_STR_BUILDER
 #include <fdata.hpp>
 
 #include <fstream>
 #include <sstream>
 
-#include <common.hpp>
+#include <cstdio>
 
+#include "macros.hpp"
+
+#include <common.hpp>
+#include <common.h>
 #include <log.hpp>
 
 namespace fdata{
@@ -92,7 +98,7 @@ namespace fdata{
     std::vector<ProjectTemplate> ProjectTemplate::load(const std::string& p){
         std::vector<ProjectTemplate> t;
 
-        std::ifstream file(p);
+        /*std::ifstream file(p);
         if(!file.good())
             dtk::log::error("Failed to open template file.", 111); //EACCES
         
@@ -444,13 +450,256 @@ namespace fdata{
             }
         }
 
-        file.close();
+        file.close();*/
+
+        dtk::ml::MLRoot* root = 0;
+
+        //Load file
+        FILE* file = fopen(p.c_str(), "r");
+        if(!file)
+            dtk::log::error("Failed to open template file (\"" + p + "\").", 111); //EACCES
+        
+        root = dtk::ml::ml_load_file(file);
+
+        fclose(file);
+
+        //Validate root
+        if(root->attribute_no > 0)
+            dtk::log::info("Ignored root attributes in template file (\"" + p + "\").");
+        
+        //Load templates
+        for(size_t i = 0; i < root->section_no; i++){
+            if(!STRCMP_EQ(root->sections[i]->name, "template")){
+                dtk::log::info("Ignored root section (\"" + std::string(dtk::common::common_str_copy(root->sections[i]->name)) + "\") in template file (\"" + p + "\").");
+                continue;
+            }
+
+            ProjectTemplate tmp;
+            dtk::ml::MLSection* tmp_dtk = dtk::ml::ml_new_section();
+            tmp_dtk->name = "template";
+
+            //Validate
+            if(root->sections[i]->value_no > 0)
+                dtk::log::info("Ignored template values in file (\"" + p + "\").");
+
+            //Load modifiers
+            for(size_t j = 0; j < root->sections[i]->modifier_no; j++){
+                char* val = dtk::common::common_str_copy(root->sections[i]->modifiers[j]->value);
+                if(STRCMP_EQ(root->sections[i]->modifiers[j]->name, "name")){
+                    tmp.name = val;
+                    dtk::ml::ml_add_modifier(tmp_dtk, dtk::ml::ml_new_attribute("name", val));
+                } else{
+                    dtk::log::info("Ignored template modifier (\"" + std::string(dtk::common::common_str_copy(root->sections[i]->modifiers[j]->name)) + "\") in file (\"" + p + "\").");
+                }
+            }
+
+            //Load attributes
+            for(size_t j = 0; j < root->sections[i]->attribute_no; j++){
+                char* val = dtk::common::common_str_copy(root->sections[i]->attributes[j]->value);
+                if(STRCMP_EQ(root->sections[i]->attributes[j]->name, "dir")){
+                    tmp.dirs.push_back(val);
+                    dtk::ml::ml_add_attribute(tmp_dtk, dtk::ml::ml_new_attribute("dir", val));
+                } else if(STRCMP_EQ(root->sections[i]->attributes[j]->name, "ebin")){
+                    tmp.exports.push_back({
+                        val, 
+                        project::PROJECT_EXPORT_BIN
+                    });
+                    dtk::ml::ml_add_attribute(tmp_dtk, dtk::ml::ml_new_attribute("ebin", val));
+                } else if(STRCMP_EQ(root->sections[i]->attributes[j]->name, "elib")){
+                    tmp.exports.push_back({
+                        val, 
+                        project::PROJECT_EXPORT_LIB
+                    });
+                    dtk::ml::ml_add_attribute(tmp_dtk, dtk::ml::ml_new_attribute("elib", val));
+                } else if(STRCMP_EQ(root->sections[i]->attributes[j]->name, "einc")){
+                    tmp.exports.push_back({
+                        val, 
+                        project::PROJECT_EXPORT_INCLUDE
+                    });
+                    dtk::ml::ml_add_attribute(tmp_dtk, dtk::ml::ml_new_attribute("einc", val));
+                } else if(STRCMP_EQ(root->sections[i]->attributes[j]->name, "eres")){
+                    tmp.exports.push_back({
+                        val, 
+                        project::PROJECT_EXPORT_RES
+                    });
+                    dtk::ml::ml_add_attribute(tmp_dtk, dtk::ml::ml_new_attribute("eres", val));
+                } else{
+                    dtk::log::info("Ignored template attribute (\"" + std::string(dtk::common::common_str_copy(root->sections[i]->attributes[j]->name)) + "\") in file (\"" + p + "\").");
+                }
+            }
+
+            //Load sections
+            for(size_t j = 0; j < root->sections[i]->section_no; j++){
+                if(STRCMP_EQ(root->sections[i]->sections[j]->name, "file")){
+                    ProjectTemplateFile f;
+                    dtk::ml::MLSection* s = dtk::ml::ml_new_section();
+                    s->name = "file";
+
+                    //Validate
+                    if(root->sections[i]->sections[j]->section_no > 0)
+                        dtk::log::info("Ignored file sections in file (\"" + p + "\").");
+                    
+                    if(root->sections[i]->sections[j]->attribute_no > 0)
+                        dtk::log::info("Ignored file attributes in file (\"" + p + "\").");
+
+                    //Load modifiers
+                    for(size_t k = 0; k < root->sections[i]->sections[j]->modifier_no; k++){
+                        char* val = dtk::common::common_str_copy(root->sections[i]->sections[j]->modifiers[k]->value);
+
+                        if(STRCMP_EQ(root->sections[i]->sections[j]->modifiers[k]->name, "name")){
+                            f.name = val;
+                            dtk::ml::ml_add_modifier(s, dtk::ml::ml_new_attribute("name", val));
+                        } else{
+                            dtk::log::info("Ignored file modifier (\"" + std::string(dtk::common::common_str_copy(root->sections[i]->sections[j]->modifiers[k]->name)) + "\") in file (\"" + p + "\").");
+                        }
+                    }
+
+                    //Load values
+                    std::stringstream cnt;
+                    for(size_t k = 0; k < root->sections[i]->sections[j]->value_no; k++){
+                        char* val = dtk::common::common_str_copy(root->sections[i]->sections[j]->values[k]);
+                        cnt << val;
+                        dtk::ml::ml_add_value(s, val);
+                    }
+                    f.cnt = cnt.str();
+
+                    tmp.files.push_back(f);
+                    dtk::ml::ml_add_section(tmp_dtk, s);
+                } else if(STRCMP_EQ(root->sections[i]->sections[j]->name, "rule")){
+                    ProjectTemplateRule r;
+                    dtk::ml::MLSection* s = dtk::ml::ml_new_section();
+                    s->name = "rule";
+
+                    //Validate
+                    if(root->sections[i]->sections[j]->section_no > 0)
+                        dtk::log::info("Ignored rule sections in file (\"" + p + "\").");
+
+                    if(root->sections[i]->sections[j]->value_no > 0)
+                        dtk::log::info("Ignored rule values in file (\"" + p + "\").");
+
+                    //Load modifiers
+                    for(size_t k = 0; k < root->sections[i]->sections[j]->modifier_no; k++){
+                        char* val = dtk::common::common_str_copy(root->sections[i]->sections[j]->modifiers[k]->value);
+                        if(STRCMP_EQ(root->sections[i]->sections[j]->modifiers[k]->name, "name")){
+                            //r.name = root->sections[i]->sections[j]->modifiers[k]->value;
+                        } else if(STRCMP_EQ(root->sections[i]->sections[j]->modifiers[k]->name, "in")){
+                            r.in = val;
+                            dtk::ml::ml_add_modifier(s, dtk::ml::ml_new_attribute("in", val));
+                        } else if(STRCMP_EQ(root->sections[i]->sections[j]->modifiers[k]->name, "out")){
+                            r.out = val;
+                            dtk::ml::ml_add_modifier(s, dtk::ml::ml_new_attribute("out", val));
+                        } else{
+                            dtk::log::info("Ignored rule modifier (\"" + std::string(dtk::common::common_str_copy(root->sections[i]->sections[j]->modifiers[k]->name)) + "\") in file (\"" + p + "\").");
+                        }
+                    }
+
+                    //Load attributes
+                    for(size_t k = 0; k < root->sections[i]->sections[j]->attribute_no; k++){
+                        char* val = dtk::common::common_str_copy(root->sections[i]->sections[j]->attributes[k]->value);
+
+                        if(STRCMP_EQ(root->sections[i]->sections[j]->attributes[k]->name, "exe")){
+                            r.exes.push_back(val);
+                            dtk::ml::ml_add_attribute(s, dtk::ml::ml_new_attribute("exe", val));
+                        } else{
+                            dtk::log::info("Ignored rule attribute (\"" + std::string(dtk::common::common_str_copy(root->sections[i]->sections[j]->attributes[k]->name)) + "\") in file (\"" + p + "\").");
+                        }
+                    }
+
+                    tmp.rules.push_back(r);
+                    dtk::ml::ml_add_section(tmp_dtk, s);
+                } else if(STRCMP_EQ(root->sections[i]->sections[j]->name, "link")){
+                    ProjectTemplateRule r;
+                    dtk::ml::MLSection* s = dtk::ml::ml_new_section();
+                    s->name = "link";
+
+                    //Validate
+                    if(root->sections[i]->sections[j]->section_no > 0)
+                        dtk::log::info("Ignored link sections in file (\"" + p + "\").");
+
+                    if(root->sections[i]->sections[j]->value_no > 0)
+                        dtk::log::info("Ignored link values in file (\"" + p + "\").");
+
+                    //Load modifiers
+                    for(size_t k = 0; k < root->sections[i]->sections[j]->modifier_no; k++){
+                        char* val = dtk::common::common_str_copy(root->sections[i]->sections[j]->modifiers[k]->value);
+
+                        if(STRCMP_EQ(root->sections[i]->sections[j]->modifiers[k]->name, "name")){
+                            //r.name = root->sections[i]->sections[j]->modifiers[k]->value;
+                        } else if(STRCMP_EQ(root->sections[i]->sections[j]->modifiers[k]->name, "in")){
+                            r.in = val;
+                            dtk::ml::ml_add_modifier(s, dtk::ml::ml_new_attribute("in", val));
+                        } else if(STRCMP_EQ(root->sections[i]->sections[j]->modifiers[k]->name, "out")){
+                            r.out = val;
+                            dtk::ml::ml_add_modifier(s, dtk::ml::ml_new_attribute("out", val));
+                        } else{
+                            dtk::log::info("Ignored link modifier (\"" + std::string(dtk::common::common_str_copy(root->sections[i]->sections[j]->modifiers[k]->name)) + "\") in file (\"" + p + "\").");
+                        }
+                    }
+
+                    //Load attributes
+                    for(size_t k = 0; k < root->sections[i]->sections[j]->attribute_no; k++){
+                        char* val = dtk::common::common_str_copy(root->sections[i]->sections[j]->attributes[k]->value);
+
+                        if(STRCMP_EQ(root->sections[i]->sections[j]->attributes[k]->name, "exe")){
+                            r.exes.push_back(val);
+                            dtk::ml::ml_add_attribute(s, dtk::ml::ml_new_attribute("exe", val));
+                        } else{
+                            dtk::log::info("Ignored link attribute (\"" + std::string(dtk::common::common_str_copy(root->sections[i]->sections[j]->attributes[k]->name)) + "\") in file (\"" + p + "\").");
+                        }
+                    }
+
+                    tmp.links.push_back(r);
+                    dtk::ml::ml_add_section(tmp_dtk, s);
+                } else if(STRCMP_EQ(root->sections[i]->sections[j]->name, "clean")){
+                    ProjectTemplateCleanRule r;
+                    dtk::ml::MLSection* s = dtk::ml::ml_new_section();
+                    s->name = "clean";
+
+                    //Validate
+                    if(root->sections[i]->sections[j]->modifier_no > 0)
+                        dtk::log::info("Ignored clean modifiers in file (\"" + p + "\").");
+
+                    if(root->sections[i]->sections[j]->section_no > 0)
+                        dtk::log::info("Ignored clean sections in file (\"" + p + "\").");
+
+                    if(root->sections[i]->sections[j]->value_no > 0)
+                        dtk::log::info("Ignored clean values in file (\"" + p + "\").");
+
+                    //Load attributes
+                    for(size_t k = 0; k < root->sections[i]->sections[j]->attribute_no; k++){
+                        char* val = dtk::common::common_str_copy(root->sections[i]->sections[j]->attributes[k]->value);
+                        if(STRCMP_EQ(root->sections[i]->sections[j]->attributes[k]->name, "dir")){
+                            r.dirs.push_back(val);
+                            dtk::ml::ml_add_attribute(s, dtk::ml::ml_new_attribute("dir", val));
+                        } else if(STRCMP_EQ(root->sections[i]->sections[j]->attributes[k]->name, "file")){
+                            r.files.push_back(val);
+                            dtk::ml::ml_add_attribute(s, dtk::ml::ml_new_attribute("file", val));
+                        } else if(STRCMP_EQ(root->sections[i]->sections[j]->attributes[k]->name, "exe")){
+                            r.exes.push_back(val);
+                            dtk::ml::ml_add_attribute(s, dtk::ml::ml_new_attribute("exe", val));
+                        } else{
+                            dtk::log::info("Ignored rule attribute (\"" + std::string(dtk::common::common_str_copy(root->sections[i]->sections[j]->attributes[k]->name)) + "\") in file (\"" + p + "\").");
+                        }
+                    }
+
+                    tmp.clean = r;
+                    dtk::ml::ml_add_section(tmp_dtk, s);
+                } else{
+                    dtk::log::info("Ignored template section (\"" + std::string(dtk::common::common_str_copy(root->sections[i]->sections[j]->name)) + "\") in file (\"" + p + "\").");
+                }
+            }
+
+            tmp.dtk = tmp_dtk;
+            t.push_back(tmp);
+        }
+
+        dtk::ml::ml_free_root(root);
 
         return t;
     }
 
     std::string ProjectTemplate::to_string() const{
-        std::stringstream ss;
+        /*std::stringstream ss;
         ss << "<template>" << std::endl;
         ss << "\t!name: " << name << std::endl;
 
@@ -522,7 +771,14 @@ namespace fdata{
         }
 
         ss << "</template>" << std::endl;
-        return ss.str();
+        return ss.str();*/
+
+        char* str = (char*)malloc(1);
+        *str = 0;
+
+        str = dtk::ml::ml_put_section(dtk, str, "");
+
+        return std::string(str);
     }
 
     void inpostprocess(std::string& s, const std::string& in,

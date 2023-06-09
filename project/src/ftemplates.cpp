@@ -216,7 +216,7 @@ namespace ftemplates{
             if(!found){
                 names.push_back(tmpl.name);
 
-                templates_file << "Temaplate: " << tmpl.name << std::endl;
+                templates_file << "<!-- Temaplate: " << tmpl.name << " -->" << std::endl;
                 templates_file << tmpl.to_string() << std::endl;
             }
         }
@@ -236,7 +236,7 @@ namespace ftemplates{
             if(!found){
                 names.push_back(tmpl.name);
 
-                templates_file << "Template: " << tmpl.name << std::endl;
+                templates_file << "<!-- Template: " << tmpl.name << " -->" << std::endl;
                 templates_file << tmpl.to_string() << std::endl;
             }
         }

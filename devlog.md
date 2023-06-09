@@ -16,12 +16,19 @@
     <li>Moved ml_format_str from common to ml</li>
     <li>Removed 'exit' from .scripts/test.sh</li>
     <li>Updated .gitignore</li>
+    <li>project is using ml to interpret template files</li>
 </ol>
 
 # Todo:
 <ol>
     <li>Add support of xml files generation to dtklc</li>
-    <li>project using ml</li>
     <li>project keep track of used libs</li>
+</ol>
+
+# Movet to next version
+<ol>
     <li>Add project export</li>
+    <li>Add name modifier to rule and link in template files</li>
+    <li>Add additional section to template file</li>
+    <li>Reorganize template files' structure</li>
 </ol>

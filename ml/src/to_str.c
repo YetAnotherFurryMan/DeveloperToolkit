@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include <common.h>
+#include <log.h>
 
 char* ml_put(struct MLAttribute* d, char* str, char* prefix, char initializer, char* equalizer, char* terminator){
     size_t _begin_leng = strlen(prefix) + 1 + strlen(d->name); //{prefix}{initializer}{name}

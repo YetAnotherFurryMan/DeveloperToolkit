@@ -55,19 +55,22 @@ void ml_free_root(struct MLRoot* r){
         ml_free_attribute(r->definitions[i]);
     
     free(r->definitions);
-    r->definitions = r->definition_no = 0;
+    r->definitions = 0;
+    r->definition_no = 0;
     
     //free attributes
     for(int i = 0; i < r->attribute_no; i++)
         ml_free_attribute(r->attributes[i]);
     
     free(r->attributes);
-    r->attributes = r->attribute_no = 0;
+    r->attributes = 0;
+    r->attribute_no = 0;
 
     //free sections
     for(int i = 0; i < r->section_no; i++)
         ml_free_section(r->sections[i]);
     
     free(r->sections);
-    r->sections = r->section_no = 0;
+    r->sections = 0;
+    r->section_no = 0;
 }

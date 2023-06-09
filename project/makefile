@@ -1,6 +1,6 @@
 name := project
 
-libs := -llog++ -lcommon++
+libs := -llog++ -lcommon++ -lml -lcommon -llog
 std := -std=c++2a
 
 bin := $(patsubst src/%,bin/%.o,$(wildcard src/*))

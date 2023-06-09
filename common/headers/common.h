@@ -6,7 +6,7 @@ namespace dtk::common{
 #ifndef _DTK_COMMON_H_
 #define _DTK_COMMON_H_
 
-//Nothing yet
+char* common_str_copy(const char* s);
 
 #endif //_DTK_COMMON_H
 
