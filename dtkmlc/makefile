@@ -1,6 +1,6 @@
 name := dtkmlc
 
-libs := -L ../lib -llog++ -lml
+libs := -L ../lib -llog++ -lml -lcommon++
 std := -std=c++2a
 
 bin := $(patsubst src/%,bin/%.o,$(wildcard src/*.cpp))

@@ -16,14 +16,22 @@ char* ml_format_str_put_slash(char* s, size_t* size, char c){
     return s;
 }
 
-char* ml_format_str_puts_slash(char* s, size_t* size, char* v){
-    *size += 1 + strlen(v); //{size} + \\ + {strlen(v)}
+char* ml_format_str_put_hex_slash(char* s, size_t* size, int v){
+    *size += 5; //{size} + \\x + {v}
     s = realloc(s, (*size));
 
-    size_t pos = strlen(s);
-    s[pos] = '\\';
-    s[pos + 1] = 0;
-    strcat(s, v);
+    //size_t pos = strlen(s);
+    //s[pos] = '\\';
+    //s[pos + 1] = 0;
+    //strcat(s, v);
+
+    char buff[5]; //\\x{v}\0
+    if(v > 15)
+        sprintf(buff, "\\x%x", v);
+    else
+        sprintf(buff, "\\x0%x", v);
+    
+    strcat(s, buff);
 
     return s;
 }
@@ -43,6 +51,8 @@ char* ml_format_str(char* s){
             buf = ml_format_str_put_slash(buf, &buf_size, 'n');
         else if(c == '\t')
             buf = ml_format_str_put_slash(buf, &buf_size, 't');
+        else if(c < 32 || c > 128)
+            buf = ml_format_str_put_hex_slash(buf, &buf_size, (int)c);
         else{
             buf[strlen(buf) + 1] = 0;
             buf[strlen(buf)] = c;

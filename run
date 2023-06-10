@@ -50,4 +50,4 @@ make -C project
 cp project/project bin/project
 
 #test
-./.scripts/test.sh
+bash ./.scripts/test.sh

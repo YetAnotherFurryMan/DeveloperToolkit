@@ -75,7 +75,7 @@ int main(int argc, char** argv){
             ml_to_txt(file, root);
             break;
         case OUTPUT_XML:
-            dtk::log::info("Not supported yet.");
+            ml_to_xml(file, root);
             break;
     }
 

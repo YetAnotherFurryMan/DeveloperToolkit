@@ -51,6 +51,8 @@ hex [0-9a-fA-F]{2}
 <VALUE>\\\' { ml_putc_value_lex('\''); }
 <VALUE>\\\\ { ml_putc_value_lex('\\'); }
 <VALUE>\\n { ml_putc_value_lex('\n'); }
+<VALUE>\\r { ml_putc_value_lex('\r'); }
+<VALUE>\\t { ml_putc_value_lex('\t'); }
 <VALUE>\\(x|X){hex} {
                         int temp = 0;
                         for(int i = 2; i > 0; i--){
@@ -81,6 +83,8 @@ hex [0-9a-fA-F]{2}
 <VALUE_LONG>\\\' { ml_putc_value_lex('\''); }
 <VALUE_LONG>\\\\ { ml_putc_value_lex('\\'); }
 <VALUE_LONG>\\n { ml_putc_value_lex('\n'); }
+<VALUE_LONG>\\r { ml_putc_value_lex('\r'); }
+<VALUE_LONG>\\t { ml_putc_value_lex('\t'); }
 <VALUE_LONG>\\(x|X){hex} {
                         int temp = 0;
                         for(int i = 2; i > 0; i--){

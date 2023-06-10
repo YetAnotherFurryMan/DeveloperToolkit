@@ -17,18 +17,26 @@
     <li>Removed 'exit' from .scripts/test.sh</li>
     <li>Updated .gitignore</li>
     <li>project is using ml to interpret template files</li>
-    <li>Added dtk_str_copy(char*) to common
+    <li>Added dtk_str_copy(char*) to common</li>
+    <li>Added XML support to dtkmlc</li>
+    <li>ml_fromat_str(char* s) uses \xXX notation for any character c smaller than 32 and bigger than 128</li>
+    <li>ml lexer know \t and \r</li>
+    <li>Both LONG_VALUE and VALUE are now formated in lexer</li>
+    <li>Added .scripts/clean.sh</li>
+    <li>Setted execution method to bash {path}</li>
 </ol>
 
 # Todo:
 <ol>
-    <li>Add support of xml files generation to dtklc</li>
     <li>project keep track of used libs</li>
 </ol>
 
-# Movet to next version
+# Moved to next version
 <ol>
-    <li>Add project export</li>
+    <li>Add module exporting to project</li>
+    <li>Add git support to project</li>
+    <li>Add release export to project</li>
+    <li>Add debug export to project</li>
     <li>Add name modifier to rule and link in template files</li>
     <li>Add additional section to template file</li>
     <li>Reorganize template files' structure</li>
