@@ -1,32 +1,13 @@
 #!/bin/bash
 
-#Exports
-rm -f bin/*
-rm -f lib/*
-rm -f includes/*
+rm -fr bin
+rm -fr lib
+rm -fr includes
+rm -fr test
 
-#log
-make -C log clean
-
-#log++
-make -C log++ clean
-
-#common
-make -C common clean
-
-#common++
-make -C common++ clean
-
-#ml
-make -C ml clean
-
-#dtkmlc
-make -C dtkmlc clean
-
-#project
-make -C project clean
-
-#Test
-cd test
-rm -rf bash* make* *.out.*
-cd ..
+#Run clean target for all modules
+modules=("common" "common++" "log" "log++" "ml" "dtkmlc" "project")
+for module in ${modules[@]}
+do
+    make -C $module clean
+done
