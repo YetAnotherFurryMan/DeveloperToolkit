@@ -3,8 +3,6 @@
 
 #include <cstring>
 
-//#define STRCMP_EQ(a, b) std::strcmp(a, b) == 0
-
 #include <log.hpp>
 
 #include <defs.hpp>
@@ -98,12 +96,15 @@ int main(int argc, char** argv){
             }
         }
 
-        //Create the project files and scripts
-        ft::create_project(name, type, build);
+        //Create the project's files and scripts
+        ft::create_project(name, type, build, PROJECT_FILE, TEMPLATES_FILE, MODULES_FILE);
 
-        ft::update_templates_file(name + "/.project/templates", templates);
+        ft::update_templates_file(name + "/" + TEMPLATES_FILE, templates);
 
         if(type == pr::PROJECT_TYPE_SOLUTION){ //Use template if project is fast
+            if(templates.empty())
+                dtk::log::fatal_error("Template not found \"" + templ + "\".", 83); //ELOAD
+
             fd::ProjectTemplate& used_templ = templates[0];
             
             //Find choosen template and return an error if not found
@@ -124,7 +125,7 @@ int main(int argc, char** argv){
         }
     } else if(STRCMP_EQ(task, "info")){
         //Load project data, validate and output them
-        fd::ProjectFile project("./.project/project");
+        fd::ProjectFile project(PROJECT_FILE);
         
         dtk::log::info("Name: " + project.name);
         
@@ -134,11 +135,9 @@ int main(int argc, char** argv){
                 break;
             case pr::PROJECT_TYPE_SOLUTION:
                 dtk::log::info("Type: SOLUTION");
+                dtk::log::warning("Project is non-modular.");
                 break;
         }
-
-        if(project.type != pr::PROJECT_TYPE_PROJECT)
-            dtk::log::warning("Project is non-modular.");
         
         switch(project.build){
             case pr::PROJECT_BUILD_MAKE:
@@ -159,9 +158,18 @@ int main(int argc, char** argv){
 
             dtk::log::info("Enabled: " + enabled);
         }
+
+        //Load templates
+        std::vector<fd::ProjectTemplate> templates = fd::ProjectTemplate::load(TEMPLATES_FILE);
+
+        std::string names;
+        for(auto& t: templates)
+            names += " " + t.name;
+        
+        dtk::log::info("Loaded templates: " + names);
     } else if(STRCMP_EQ(task, "enable")){
         //Load project data and try to enable the functionality
-        fd::ProjectFile project("./.project/project");
+        fd::ProjectFile project(PROJECT_FILE);
         bool fast = project.type == pr::PROJECT_TYPE_SOLUTION;
 
         //Get functionality and pop it
@@ -174,7 +182,7 @@ int main(int argc, char** argv){
         //Select the functionality and enable it (if hadn't been yet)
         if(STRCMP_EQ(functionality, "log") || STRCMP_EQ(functionality, "silent")){
             if(project.enabled & pr::PROJECT_ENABLE_LOG){
-                dtk::log::warning("\"silent\" already enabled.");
+                dtk::log::warning("\"" + std::string(functionality) + "\" already enabled.");
                 return 0;
             }
 
@@ -182,20 +190,20 @@ int main(int argc, char** argv){
             ft::update_run_script("run", project.build, fast, project.enabled);
         } else if(STRCMP_EQ(functionality, "test") || STRCMP_EQ(functionality, "tests")){
             if(project.enabled & pr::PROJECT_ENABLE_TESTS){
-                dtk::log::warning("\"tests\" already enabled.");
+                dtk::log::warning("\"" + std::string(functionality) + "\" already enabled.");
                 return 0;
             }
 
             project.enabled |= pr::PROJECT_ENABLE_TESTS;
             ft::update_run_script("run", project.build, fast, project.enabled);
         } else{
-            dtk::log::fatal_error(std::string("Invalid functionality name\"") + functionality + "\"", 130); //ENOEXEC
+            dtk::log::fatal_error("Invalid functionality name\"" + std::string(functionality) + "\"", 130); //ENOEXEC
         }
 
         project.update();
     } else if(STRCMP_EQ(task, "disable")){
         //Load project data and try to disable the functionality
-        fd::ProjectFile project("./.project/project");
+        fd::ProjectFile project(PROJECT_FILE);
         bool fast = project.type == pr::PROJECT_TYPE_SOLUTION;
 
         //Get functionality and pop it
@@ -208,7 +216,7 @@ int main(int argc, char** argv){
         //Select the functionality and disable it (if hadn't been yet)
         if(STRCMP_EQ(functionality, "log")  || STRCMP_EQ(functionality, "silent")){
             if(project.enabled & pr::PROJECT_ENABLE_LOG == 0){
-                dtk::log::warning("\"silent\" already disabled.");
+                dtk::log::warning("\"" + std::string(functionality) + "\" already disabled.");
                 return 0;
             }
 
@@ -216,14 +224,14 @@ int main(int argc, char** argv){
             ft::update_run_script("run", project.build, fast, project.enabled);
         } else if(STRCMP_EQ(functionality, "test") || STRCMP_EQ(functionality, "tests")){
             if(project.enabled & pr::PROJECT_ENABLE_TESTS == 0){
-                dtk::log::warning("\"tests\" already disabled.");
+                dtk::log::warning("\"" + std::string(functionality) + "\" already disabled.");
                 return 0;
             }
 
             project.enabled &= ~pr::PROJECT_ENABLE_TESTS;
             ft::update_run_script("run", project.build, fast, project.enabled);
         } else{
-            dtk::log::fatal_error(std::string("Invalid functionality name\"") + functionality + "\"", 130); //ENOEXEC
+            dtk::log::fatal_error("Invalid functionality name\"" + std::string(functionality) + "\"", 130); //ENOEXEC
         }
 
         //Save changes
@@ -235,21 +243,25 @@ int main(int argc, char** argv){
         for(int i = 0; i < argc; i++){
             if(STRCMP_EQ(argv[i], "-T") || STRCMP_EQ(argv[i], "--template-file")){ //Add a template, return an error if there is a syntax error
                 if(++i >= argc)
-                    dtk::log::fatal_error("Excepted argument after '-T'.", 83); //ELOAD
+                    dtk::log::fatal_error("Excepted argument after '" + std::string(argv[i - 1]) + "'.", 83); //ELOAD
 
                 auto tmpls = fd::ProjectTemplate::load(argv[i]); //Load templates
 
                 for(auto& tmpl: tmpls)
                     templates.push_back(tmpl);
             } else{
-                dtk::log::fatal_error(std::string("Unknown argument \"") + argv[i] + "\"", 158); //EMVSPARM
+                dtk::log::fatal_error("Unknown argument \"" + std::string(argv[i]) + "\"", 158); //EMVSPARM
             }
         }
 
-        ft::update_templates_file(".project/templates", templates);
+        ft::update_templates_file(TEMPLATES_FILE, templates);
     } else if(STRCMP_EQ(task, "module")){
         //Load project
-        fd::ProjectFile project(".project/project");
+        fd::ProjectFile project(PROJECT_FILE);
+
+        //Error if project is non-modular
+        if(project.type != pr::PROJECT_TYPE_PROJECT)
+            dtk::log::fatal_error("Project is non-modular.", 130); //ENOEXEC
 
         //Load data
         std::string name;
@@ -265,7 +277,7 @@ int main(int argc, char** argv){
                     dtk::log::fatal_error("Template already setted.", 83); //ELOAD
 
                 if(++i >= argc)
-                    dtk::log::fatal_error("Excepted argument after '-t'.", 83); //ELOAD
+                    dtk::log::fatal_error("Excepted argument after '" + std::string(argv[i - 1]) + "'.", 83); //ELOAD
 
                 tmpl = argv[i];
                 tmpl_set = true;
@@ -274,12 +286,12 @@ int main(int argc, char** argv){
                     dtk::log::fatal_error("Name already setted.", 83); //ELOAD
 
                 if(++i >= argc)
-                    dtk::log::fatal_error("Excepted argument after '-n'.", 83); //ELOAD
+                    dtk::log::fatal_error("Excepted argument after '" + std::string(argv[i -1]) + "'.", 83); //ELOAD
 
                 name = argv[i];
                 name_set = true;
             } else{
-                dtk::log::fatal_error(std::string("Unknown argument \"") + argv[i] + "\"", 158); //EMVSPARM
+                dtk::log::fatal_error("Unknown argument \"" + std::string(argv[i]) + "\"", 158); //EMVSPARM
             }
         }
 
@@ -291,7 +303,7 @@ int main(int argc, char** argv){
             dtk::log::fatal_error("Template has not been specified.", 83); //ELOAD
         
         //Load templates
-        auto templates = fd::ProjectTemplate::load(".project/templates");
+        auto templates = fd::ProjectTemplate::load(TEMPLATES_FILE);
 
         //Choose template
         fd::ProjectTemplate& used_templ = templates[0];
@@ -313,7 +325,7 @@ int main(int argc, char** argv){
         ft::build_template(used_templ.compile(name, project.build));
 
         //Add module to project
-        fd::ProjectModulesFile modules(".project/modules");
+        fd::ProjectModulesFile modules(MODULES_FILE);
         modules.modules.push_back(used_templ.get_module(name, project.build));
         modules.update();
 

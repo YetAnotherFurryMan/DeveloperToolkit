@@ -6,7 +6,7 @@
 #include <macros.hpp>
 
 namespace ftemplates{
-    void create_project(const std::string& name, project::type t, project::build b){
+    void create_project(const std::string& name, project::type t, project::build b, const char* project_file, const char* templates_file, const char* modules_file){
         bool fast = t == project::PROJECT_TYPE_SOLUTION;
 
         //Create project directories
@@ -21,8 +21,8 @@ namespace ftemplates{
             CREATE_DIR(name + "/bin");
         }
 
-        //Create .project/project file
-        std::ofstream project(name + "/.project/project");
+        //Create project file
+        std::ofstream project(name + "/" + project_file);
         FILE_OK(project);
         
         project << "#Name: " << name << std::endl;
@@ -31,12 +31,12 @@ namespace ftemplates{
         
         project.close();
 
-        //Create .project/templates file (with no data)
-        CREATE_FILE(name + "/.project/templates");
+        //Create the templates file (with no data)
+        CREATE_FILE(name + "/" + templates_file);
 
-        //Create scripts (and .project/modules file in non-fast case)
+        //Create scripts (and the modules file in non-fast case)
         if(!fast){
-            CREATE_FILE(name + "/.project/modules");
+            CREATE_FILE(name + "/" + modules_file);
 
             CREATE_SCRIPT(name + "/.scripts/clean.sh");
             CREATE_SCRIPT(name + "/.scripts/make.sh");
@@ -74,7 +74,7 @@ namespace ftemplates{
         FILE_OK(run);
 
         //Get make command
-        std::string make_cmd = "./.scripts/make.sh";
+        std::string make_cmd = "bash .scripts/make.sh";
         if(fast && b != project::PROJECT_BUILD_BASH)
             make_cmd = "make";
         
@@ -94,7 +94,7 @@ namespace ftemplates{
             if(!fast){
                 run << "#Clean" << std::endl;
                 run << "echo \"#Clean:\" >> $log" << std::endl;
-                run << "./.scripts/clean.sh >> $log" << std::endl;
+                run << "bash .scripts/clean.sh >> $log" << std::endl;
                 run << "echo \"\" >> $log" << std::endl;
                 run << std::endl;
             }
@@ -108,13 +108,13 @@ namespace ftemplates{
             if(tests){
                 run << "#Test" << std::endl;
                 run << "echo \"#Test:\" >> $log" << std::endl;
-                run << "./.scripts/test.sh >> $log" << std::endl;
+                run << "bash .scripts/test.sh >> $log" << std::endl;
                 run << "echo \"\" >> $log" << std::endl;
             }
         } else{ //normal case
             if(!fast){
                 run << "#Clean" << std::endl;
-                run << "./.scripts/clean.sh" << std::endl;
+                run << "bash .scripts/clean.sh" << std::endl;
                 run << std::endl;
             }
 
@@ -124,7 +124,7 @@ namespace ftemplates{
 
             if(tests){
                 run << "#Test" << std::endl;
-                run << "./.scripts/test.sh" << std::endl;
+                run << "bash .scripts/test.sh" << std::endl;
             }
         }
 
@@ -159,7 +159,7 @@ namespace ftemplates{
                     break;
                 case project::PROJECT_BUILD_BASH:
                     make << "cd " << m.name << std::endl;
-                    make << "./make.sh" << std::endl;
+                    make << "bash make.sh" << std::endl;
                     make << "cd .." << std::endl;
                     break;
             }

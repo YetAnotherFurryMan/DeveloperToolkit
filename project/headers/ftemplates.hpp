@@ -7,7 +7,7 @@
 #include "fdata.hpp"
 
 namespace ftemplates{
-    void create_project(const std::string& name, project::type t, project::build b);
+    void create_project(const std::string& name, project::type t, project::build b, const char* project_file, const char* templates_file, const char* modules_file);
 
     void update_run_script(const std::string& p, project::build b, bool fast, unsigned int enabled = 0);
     void update_make_script(const std::string& p, const fdata::ProjectModulesFile& modules, project::build b);

@@ -23,11 +23,15 @@
     <li>ml lexer know \t and \r</li>
     <li>Both LONG_VALUE and VALUE are now formated in lexer</li>
     <li>Added .scripts/clean.sh</li>
-    <li>Setted execution method to bash {path}</li>
+    <li>Setted script's execution method to bash {path}</li>
+    <li>Defined PROJECT_FILE, TEMPLATES_FILE, MODULES_FILE in defs.hpp in the project module with default project, templates, modules files paths</li>
+    <li>In the project module function ProjectTemplate::load calls dtk::log::warning (insted of dtk::log::error) in "failed to open template file" case</li>
+    <li>The test script doesn't show NON_MODULAR projects' (the test objects') output now. Insted prints "Test $NAME - " and "passed" or "failed"</li>
 </ol>
 
 # Todo:
 <ol>
+    <li>the project's module file uses ml</li>
     <li>project keep track of used libs</li>
 </ol>
 
@@ -35,9 +39,7 @@
 <ol>
     <li>Add module exporting to project</li>
     <li>Add git support to project</li>
-    <li>Add release export to project</li>
-    <li>Add debug export to project</li>
+    <li>Add "config" section support to project</li>
     <li>Add name modifier to rule and link in template files</li>
-    <li>Add additional section to template file</li>
-    <li>Reorganize template files' structure</li>
+    <li>Add "additional" section support to project</li>
 </ol>

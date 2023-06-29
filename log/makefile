@@ -7,7 +7,7 @@ all: clean dir $(name).so lib$(name).a
 clean:
 	@echo Cleaning $(name)
 	@rm -f bin/*
-	@rm -f *$(name)*
+	@rm -f *.a *.so
 
 dir: bin
 

@@ -1,5 +1,9 @@
 #pragma once 
 
+#define PROJECT_FILE ".project/project"
+#define TEMPLATES_FILE ".project/templates.dtk"
+#define MODULES_FILE ".project/modules.dtk"
+
 namespace project{
     typedef enum{
         PROJECT_TYPE_PROJECT,

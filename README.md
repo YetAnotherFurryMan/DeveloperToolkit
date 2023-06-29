@@ -41,7 +41,7 @@ A set of logging functions for C++. Still work-in-progress.
 </ol>
 
 ## 5.ml
-Well, XML - bad, JSON - bad, so I wrote a lexer+tookenizer+parser for a new markup language!</br>
+Well, XML - bad, JSON - bad, TOML - bad, so I wrote a lexer+tookenizer+parser for a new markup language!</br>
 This is used by the <b>project</b> module for template-files, module-files and config.
 <ol>
   <li>dtk::ml::MLAttribute <br> a struct; holds data abound attribute/definition/modifier (simply <i>name</i> and <i>value</i> or 0)</li>
@@ -53,7 +53,7 @@ This is used by the <b>project</b> module for template-files, module-files and c
 </ol>
 
 ## 6.dtkmlc
-A very simple tool for .dtk files "compiling". That means the program transforms data from the <b>ml<b> to another format.
+A very simple tool for .dtk files "compiling". That means the program transforms data from the <b>ml</b> to another format.
 <ol>
   <li>TXT</li>
   <li>XML</li>
