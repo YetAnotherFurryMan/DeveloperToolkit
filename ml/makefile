@@ -13,7 +13,8 @@ bin:
 clean:
 	@echo Cleaning $(name)
 	@rm -f bin/*
-	@rm -f src/*.l.c src/*.y.c
+	@rm -f src/*.l.c headers/*.l.h
+	@rm -f src/*.y.c headers/*.y.h
 	@rm -f *.so *.a
 	@rm -f test/test
 

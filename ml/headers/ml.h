@@ -49,9 +49,9 @@ void ml_free_root(struct MLRoot* r);
 char* ml_format_str(char* s);
 
 #if defined(DTK_ML_STR_BUILDER)
-    char* ml_put(struct MLAttribute* d, char* str, char* prefix, char initializer, char* equalizer, char* terminator);
-    char* ml_put_section(struct MLSection* s, char* str, char* prefix);
-    char* ml_put_value(char* v, char* str, char* prefix);
+    char* ml_put(struct MLAttribute* d, char* str, const char* prefix, const char initializer, const char* equalizer, const char* terminator);
+    char* ml_put_section(struct MLSection* s, char* str, const char* prefix);
+    char* ml_put_value(const char* v, char* str, const char* prefix);
 
     #define ml_put_definition(d, str, prefix) ml_put(d, str, prefix, '#', "=", "\n")
     #define ml_put_attribute(a, str, prefix) ml_put(a, str, prefix, '!', ": ", "\n")
@@ -59,7 +59,7 @@ char* ml_format_str(char* s);
 #endif //DTK_ML_STR_BUILDER
 
 #if defined(DTK_ML_DTK_BUILDER)
-    struct MLAttribute* ml_new_attribute(char* name, char* value);
+    struct MLAttribute* ml_new_attribute(const char* name, const char* value);
     struct MLSection* ml_new_section();
 
     void ml_add_definition(struct MLSection* s, struct MLAttribute* d);

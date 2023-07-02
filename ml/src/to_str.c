@@ -102,7 +102,7 @@ char* ml_put_section(struct MLSection* s, char* str, char* prefix){
 
     //modifiers
     char* _modifiers = malloc(1);
-    _modifiers[0] = 0;
+    *_modifiers = 0;
 
     for(int i = 0; i < s->modifier_no; i++)
         _modifiers = ml_put_modifier(s->modifiers[i], _modifiers);
@@ -118,7 +118,7 @@ char* ml_put_section(struct MLSection* s, char* str, char* prefix){
     sprintf(_prefix, "%s\t", prefix);
 
     char* _cnt = malloc(1);
-    _cnt[0] = 0;
+    *_cnt = 0;
 
     //put definitions
     for(int i = 0; i < s->definition_no; i++)

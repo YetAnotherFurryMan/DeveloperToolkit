@@ -27,11 +27,11 @@
     <li>Defined PROJECT_FILE, TEMPLATES_FILE, MODULES_FILE in defs.hpp in the project module with default project, templates, modules files paths</li>
     <li>In the project module function ProjectTemplate::load calls dtk::log::warning (insted of dtk::log::error) in "failed to open template file" case</li>
     <li>The test script doesn't show NON_MODULAR projects' (the test objects') output now. Insted prints "Test $NAME - " and "passed" or "failed"</li>
+    <li>The project's modules file uses the ml to keep data about modules in projects</li>
 </ol>
 
 # Todo:
 <ol>
-    <li>the project's module file uses ml</li>
     <li>project keep track of used libs</li>
 </ol>
 

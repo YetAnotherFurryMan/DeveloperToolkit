@@ -95,15 +95,24 @@ namespace fdata{
         project.close();
     }
 
-    std::vector<ProjectTemplate> ProjectTemplate::load(const std::string& p){
+    std::string ProjectModule::to_string() const{
+        char* str = (char*)malloc(1);
+        *str = 0;
+
+        str = dtk::ml::ml_put_section(dtk, str, "");
+
+        return std::string(str);
+    }
+
+    std::vector<ProjectTemplate> ProjectTemplate::load(const std::string& path){
         std::vector<ProjectTemplate> t;
 
         dtk::ml::MLRoot* root = 0;
 
         //Load file
-        FILE* file = fopen(p.c_str(), "r");
+        FILE* file = fopen(path.c_str(), "r");
         if(!file){
-            dtk::log::warning("Failed to open template file (\"" + p + "\").");
+            dtk::log::warning("Failed to open template file (\"" + path + "\").");
             return t;
         }
         
@@ -113,12 +122,12 @@ namespace fdata{
 
         //Validate root
         if(root->attribute_no > 0)
-            dtk::log::info("Ignored root attributes in template file (\"" + p + "\").");
+            dtk::log::info("Ignored root attributes in template file (\"" + path + "\").");
         
         //Load templates
         for(size_t i = 0; i < root->section_no; i++){
             if(!STRCMP_EQ(root->sections[i]->name, "template")){
-                dtk::log::info("Ignored root section (\"" + std::string(dtk::common::common_str_copy(root->sections[i]->name)) + "\") in template file (\"" + p + "\").");
+                dtk::log::info("Ignored root section (\"" + std::string(dtk::common::common_str_copy(root->sections[i]->name)) + "\") in template file (\"" + path + "\").");
                 continue;
             }
 
@@ -128,7 +137,7 @@ namespace fdata{
 
             //Validate
             if(root->sections[i]->value_no > 0)
-                dtk::log::info("Ignored template values in file (\"" + p + "\").");
+                dtk::log::info("Ignored template values in file (\"" + path + "\").");
 
             //Load modifiers
             for(size_t j = 0; j < root->sections[i]->modifier_no; j++){
@@ -137,7 +146,7 @@ namespace fdata{
                     tmp.name = val;
                     dtk::ml::ml_add_modifier(tmp_dtk, dtk::ml::ml_new_attribute("name", val));
                 } else{
-                    dtk::log::info("Ignored template modifier (\"" + std::string(dtk::common::common_str_copy(root->sections[i]->modifiers[j]->name)) + "\") in file (\"" + p + "\").");
+                    dtk::log::info("Ignored template modifier (\"" + std::string(dtk::common::common_str_copy(root->sections[i]->modifiers[j]->name)) + "\") in file (\"" + path + "\").");
                 }
             }
 
@@ -172,7 +181,7 @@ namespace fdata{
                     });
                     dtk::ml::ml_add_attribute(tmp_dtk, dtk::ml::ml_new_attribute("eres", val));
                 } else{
-                    dtk::log::info("Ignored template attribute (\"" + std::string(dtk::common::common_str_copy(root->sections[i]->attributes[j]->name)) + "\") in file (\"" + p + "\").");
+                    dtk::log::info("Ignored template attribute (\"" + std::string(dtk::common::common_str_copy(root->sections[i]->attributes[j]->name)) + "\") in file (\"" + path + "\").");
                 }
             }
 
@@ -185,10 +194,10 @@ namespace fdata{
 
                     //Validate
                     if(root->sections[i]->sections[j]->section_no > 0)
-                        dtk::log::info("Ignored file sections in file (\"" + p + "\").");
+                        dtk::log::info("Ignored file sections in file (\"" + path + "\").");
                     
                     if(root->sections[i]->sections[j]->attribute_no > 0)
-                        dtk::log::info("Ignored file attributes in file (\"" + p + "\").");
+                        dtk::log::info("Ignored file attributes in file (\"" + path + "\").");
 
                     //Load modifiers
                     for(size_t k = 0; k < root->sections[i]->sections[j]->modifier_no; k++){
@@ -198,7 +207,7 @@ namespace fdata{
                             f.name = val;
                             dtk::ml::ml_add_modifier(s, dtk::ml::ml_new_attribute("name", val));
                         } else{
-                            dtk::log::info("Ignored file modifier (\"" + std::string(dtk::common::common_str_copy(root->sections[i]->sections[j]->modifiers[k]->name)) + "\") in file (\"" + p + "\").");
+                            dtk::log::info("Ignored file modifier (\"" + std::string(dtk::common::common_str_copy(root->sections[i]->sections[j]->modifiers[k]->name)) + "\") in file (\"" + path + "\").");
                         }
                     }
 
@@ -220,10 +229,10 @@ namespace fdata{
 
                     //Validate
                     if(root->sections[i]->sections[j]->section_no > 0)
-                        dtk::log::info("Ignored rule sections in file (\"" + p + "\").");
+                        dtk::log::info("Ignored rule sections in file (\"" + path + "\").");
 
                     if(root->sections[i]->sections[j]->value_no > 0)
-                        dtk::log::info("Ignored rule values in file (\"" + p + "\").");
+                        dtk::log::info("Ignored rule values in file (\"" + path + "\").");
 
                     //Load modifiers
                     for(size_t k = 0; k < root->sections[i]->sections[j]->modifier_no; k++){
@@ -237,7 +246,7 @@ namespace fdata{
                             r.out = val;
                             dtk::ml::ml_add_modifier(s, dtk::ml::ml_new_attribute("out", val));
                         } else{
-                            dtk::log::info("Ignored rule modifier (\"" + std::string(dtk::common::common_str_copy(root->sections[i]->sections[j]->modifiers[k]->name)) + "\") in file (\"" + p + "\").");
+                            dtk::log::info("Ignored rule modifier (\"" + std::string(dtk::common::common_str_copy(root->sections[i]->sections[j]->modifiers[k]->name)) + "\") in file (\"" + path + "\").");
                         }
                     }
 
@@ -249,7 +258,7 @@ namespace fdata{
                             r.exes.push_back(val);
                             dtk::ml::ml_add_attribute(s, dtk::ml::ml_new_attribute("exe", val));
                         } else{
-                            dtk::log::info("Ignored rule attribute (\"" + std::string(dtk::common::common_str_copy(root->sections[i]->sections[j]->attributes[k]->name)) + "\") in file (\"" + p + "\").");
+                            dtk::log::info("Ignored rule attribute (\"" + std::string(dtk::common::common_str_copy(root->sections[i]->sections[j]->attributes[k]->name)) + "\") in file (\"" + path + "\").");
                         }
                     }
 
@@ -262,10 +271,10 @@ namespace fdata{
 
                     //Validate
                     if(root->sections[i]->sections[j]->section_no > 0)
-                        dtk::log::info("Ignored link sections in file (\"" + p + "\").");
+                        dtk::log::info("Ignored link sections in file (\"" + path + "\").");
 
                     if(root->sections[i]->sections[j]->value_no > 0)
-                        dtk::log::info("Ignored link values in file (\"" + p + "\").");
+                        dtk::log::info("Ignored link values in file (\"" + path + "\").");
 
                     //Load modifiers
                     for(size_t k = 0; k < root->sections[i]->sections[j]->modifier_no; k++){
@@ -280,7 +289,7 @@ namespace fdata{
                             r.out = val;
                             dtk::ml::ml_add_modifier(s, dtk::ml::ml_new_attribute("out", val));
                         } else{
-                            dtk::log::info("Ignored link modifier (\"" + std::string(dtk::common::common_str_copy(root->sections[i]->sections[j]->modifiers[k]->name)) + "\") in file (\"" + p + "\").");
+                            dtk::log::info("Ignored link modifier (\"" + std::string(dtk::common::common_str_copy(root->sections[i]->sections[j]->modifiers[k]->name)) + "\") in file (\"" + path + "\").");
                         }
                     }
 
@@ -292,7 +301,7 @@ namespace fdata{
                             r.exes.push_back(val);
                             dtk::ml::ml_add_attribute(s, dtk::ml::ml_new_attribute("exe", val));
                         } else{
-                            dtk::log::info("Ignored link attribute (\"" + std::string(dtk::common::common_str_copy(root->sections[i]->sections[j]->attributes[k]->name)) + "\") in file (\"" + p + "\").");
+                            dtk::log::info("Ignored link attribute (\"" + std::string(dtk::common::common_str_copy(root->sections[i]->sections[j]->attributes[k]->name)) + "\") in file (\"" + path + "\").");
                         }
                     }
 
@@ -305,13 +314,13 @@ namespace fdata{
 
                     //Validate
                     if(root->sections[i]->sections[j]->modifier_no > 0)
-                        dtk::log::info("Ignored clean modifiers in file (\"" + p + "\").");
+                        dtk::log::info("Ignored clean modifiers in file (\"" + path + "\").");
 
                     if(root->sections[i]->sections[j]->section_no > 0)
-                        dtk::log::info("Ignored clean sections in file (\"" + p + "\").");
+                        dtk::log::info("Ignored clean sections in file (\"" + path + "\").");
 
                     if(root->sections[i]->sections[j]->value_no > 0)
-                        dtk::log::info("Ignored clean values in file (\"" + p + "\").");
+                        dtk::log::info("Ignored clean values in file (\"" + path + "\").");
 
                     //Load attributes
                     for(size_t k = 0; k < root->sections[i]->sections[j]->attribute_no; k++){
@@ -326,14 +335,14 @@ namespace fdata{
                             r.exes.push_back(val);
                             dtk::ml::ml_add_attribute(s, dtk::ml::ml_new_attribute("exe", val));
                         } else{
-                            dtk::log::info("Ignored rule attribute (\"" + std::string(dtk::common::common_str_copy(root->sections[i]->sections[j]->attributes[k]->name)) + "\") in file (\"" + p + "\").");
+                            dtk::log::info("Ignored rule attribute (\"" + std::string(dtk::common::common_str_copy(root->sections[i]->sections[j]->attributes[k]->name)) + "\") in file (\"" + path + "\").");
                         }
                     }
 
                     tmp.clean = r;
                     dtk::ml::ml_add_section(tmp_dtk, s);
                 } else{
-                    dtk::log::info("Ignored template section (\"" + std::string(dtk::common::common_str_copy(root->sections[i]->sections[j]->name)) + "\") in file (\"" + p + "\").");
+                    dtk::log::info("Ignored template section (\"" + std::string(dtk::common::common_str_copy(root->sections[i]->sections[j]->name)) + "\") in file (\"" + path + "\").");
                 }
             }
 
@@ -583,10 +592,33 @@ namespace fdata{
         m.name = name;
         m.tmpl_name = this->name;
 
+        dtk::ml::MLSection* m_dtk = dtk::ml::ml_new_section();
+        m_dtk->name = "module";
+
+        dtk::ml::ml_add_modifier(m_dtk, dtk::ml::ml_new_attribute("name", name.c_str()));
+        dtk::ml::ml_add_modifier(m_dtk, dtk::ml::ml_new_attribute("template", this->name.c_str()));
+
         for(auto e: exports){
             postprocess(e.name, name, "", "", std::to_string(b));
             m.exports.push_back(e);
+
+            char* att_name = "ebin";
+            switch(e.type){
+                case project::PROJECT_EXPORT_LIB:
+                    att_name = "elib";
+                    break;
+                case project::PROJECT_EXPORT_INCLUDE:
+                    att_name = "einc";
+                    break;
+                case project::PROJECT_EXPORT_RES:
+                    att_name = "eres";
+                    break;
+            }
+
+            dtk::ml::ml_add_attribute(m_dtk, dtk::ml::ml_new_attribute(att_name, e.name.c_str()));
         }
+
+        m.dtk = m_dtk;
 
         return m;
     }
@@ -594,86 +626,91 @@ namespace fdata{
     ProjectModulesFile::ProjectModulesFile(const std::string& path){
         this->path = path;
 
-        //Open modules file
-        std::ifstream file(path);
-        if(!file.good())
-            dtk::log::error("Failed to open modules file.", 111); //EACCES
+        dtk::ml::MLRoot* root;
+
+        //Load the modules' file root node
+        FILE* file = fopen(path.c_str(), "r");
+        if(!file)
+            dtk::log::warning("Failed to open template file (\"" + path + "\").");
         
-        std::string line;
-        while(getline(file, line)){
-            dtk::common::str::clean_beginning(line);
+        root = dtk::ml::ml_load_file(file);
 
-            if(line.empty())
-                continue; //nothing to do
-            
-            if(line[0] == '<'){
-                if(line.starts_with("<module>")){ //Section (error unexcepted section if not <module>)
-                    ProjectModule m;
+        fclose(file);
 
-                    bool name_set = false;
-                    bool template_set = false;
-                    bool module_end = false;
+        //Validate root
+        if(root->attribute_no > 0)
+            dtk::log::warning("Ignored root attributes in module file (\"" + path + "\").");
+        
+        if(root->definition_no > 0)
+            dtk::log::warning("Ignored root definitions in module file (\"" + path + "\").");
 
-                    while(getline(file, line)){
-                        dtk::common::str::clean_beginning(line);
-
-                        if(line.empty())
-                            continue; //nothing to do
-                        
-                        if(line[0] == '<'){ //Section
-                            if(line.starts_with("</module>")){
-                                module_end = true;
-                                break;
-                            } else{
-                                dtk::log::error("Modules file internal error: Unexcepted section.", 83); //ELOAD
-                            }
-                        } else if(line[0] == '!'){ //Attribute
-                            auto colon = line.find(':');
-                            if(colon == std::string::npos)
-                                dtk::log::error("Modules file internal error: Attribute syntax error - colon not found.", 83); //ELOAD
-
-                            std::string attribute = line.substr(1, colon - 1);
-                            std::string value = line.substr(colon + 1);
-                            dtk::common::str::clean_beginning(value);
-                            
-                            //Switch attribute
-                            if(attribute == "name"){ //Load name
-                                if(name_set)
-                                    dtk::log::error("Modules file internal error: Duplicated name.", 83); //ELOAD
-                                
-                                name_set = true;
-                                m.name = value;
-                            } else if(attribute == "ebin"){ //Load export binary
-                                m.exports.emplace_back(value, project::PROJECT_EXPORT_BIN);
-                            } else if(attribute == "elib"){ //Load export lib
-                                m.exports.emplace_back(value, project::PROJECT_EXPORT_LIB);
-                            } else if(attribute == "einc"){ //Load export include
-                                m.exports.emplace_back(value, project::PROJECT_EXPORT_INCLUDE);
-                            } else{
-                                dtk::log::error("Modules file internal error: Unknown attribute.", 83); //ELOAD
-                            }
-                        }
-                    }
-
-                    if(!module_end)
-                        dtk::log::error("Modules file internal error: Missing <module> section end.", 83); //ELOAD
-                    
-                    if(!name_set)
-                        dtk::log::error("Modules file internal error: Missing <module> name attribute.", 83); //ELOAD
-                    
-                    if(!template_set)
-                        dtk::log::error("Modules file internal error: Missing <module> template attribute.", 83); //ELOAD
-                    
-                    modules.push_back(m);
-                } else{
-                    dtk::log::error("Modules file internal error: Unexcepted section.", 83); //ELOAD
-                }
-            } else if(line[0] == '!'){ //Attribute (error unexceptrd attribute)
-                dtk::log::error("Modules file internal error: Unexcepted attribute.", 83); //ELOAD
+        //Load templates
+        for(size_t i = 0; i < root->section_no; i++){
+            if(!STRCMP_EQ(root->sections[i]->name, "module")){
+                dtk::log::warning("Ignored root section (\"" + std::string(dtk::common::common_str_copy(root->sections[i]->name)) + "\") in module file (\"" + path + "\").");
+                continue;
             }
-        }
 
-        file.close();
+            ProjectModule mod;
+            dtk::ml::MLSection* mod_dtk = dtk::ml::ml_new_section();
+            mod_dtk->name = "module";
+
+            //Validate
+            if(root->sections[i]->value_no > 0)
+                dtk::log::warning("Ignored the module's values in file (\"" + path + "\").");
+            
+            if(root->sections[i]->section_no > 0)
+                dtk::log::warning("Ignored the module's sections in file (\"" + path + "\").");
+
+            //Load modifiers
+            for(size_t j = 0; j < root->sections[i]->modifier_no; j++){
+                char* val = dtk::common::common_str_copy(root->sections[i]->modifiers[j]->value);
+                if(STRCMP_EQ(root->sections[i]->modifiers[j]->name, "name")){
+                    mod.name = val;
+                    dtk::ml::ml_add_modifier(mod_dtk, dtk::ml::ml_new_attribute("name", val));
+                } else if(STRCMP_EQ(root->sections[i]->modifiers[j]->name, "template")){
+                    mod.tmpl_name = val;
+                    dtk::ml::ml_add_modifier(mod_dtk, dtk::ml::ml_new_attribute("template", val));
+                } else{
+                    dtk::log::warning("Ignored module's modifier (\"" + std::string(dtk::common::common_str_copy(root->sections[i]->modifiers[j]->name)) + "\") in file (\"" + path + "\").");
+                }
+            }
+
+            //Load attributes
+            for(size_t j = 0; j < root->sections[i]->attribute_no; j++){
+                char* val = dtk::common::common_str_copy(root->sections[i]->attributes[j]->value);
+                if(STRCMP_EQ(root->sections[i]->attributes[j]->name, "ebin")){
+                    mod.exports.push_back({
+                        val, 
+                        project::PROJECT_EXPORT_BIN
+                    });
+                    dtk::ml::ml_add_attribute(mod_dtk, dtk::ml::ml_new_attribute("ebin", val));
+                } else if(STRCMP_EQ(root->sections[i]->attributes[j]->name, "elib")){
+                    mod.exports.push_back({
+                        val, 
+                        project::PROJECT_EXPORT_LIB
+                    });
+                    dtk::ml::ml_add_attribute(mod_dtk, dtk::ml::ml_new_attribute("elib", val));
+                } else if(STRCMP_EQ(root->sections[i]->attributes[j]->name, "einc")){
+                    mod.exports.push_back({
+                        val, 
+                        project::PROJECT_EXPORT_INCLUDE
+                    });
+                    dtk::ml::ml_add_attribute(mod_dtk, dtk::ml::ml_new_attribute("einc", val));
+                } else if(STRCMP_EQ(root->sections[i]->attributes[j]->name, "eres")){
+                    mod.exports.push_back({
+                        val, 
+                        project::PROJECT_EXPORT_RES
+                    });
+                    dtk::ml::ml_add_attribute(mod_dtk, dtk::ml::ml_new_attribute("eres", val));
+                } else{
+                    dtk::log::info("Ignored module's attribute (\"" + std::string(dtk::common::common_str_copy(root->sections[i]->attributes[j]->name)) + "\") in file (\"" + path + "\").");
+                }
+            }
+
+            mod.dtk = mod_dtk;
+            this->modules.push_back(mod);
+        }
     }
 
     void ProjectModulesFile::update(){
@@ -682,32 +719,14 @@ namespace fdata{
         if(!file.good())
             dtk::log::error("Failed to open modules file.", 111); //EACCES
         
+        //Write the data
         for(auto& m: modules){
-            file << "Module: " << m.name << std::endl;
-            file << "<module>" << std::endl;
-            file << "\t!name: " << m.name << std::endl;
-            file << "\t!template: " << m.tmpl_name << std::endl;
-
-            for(auto& e: m.exports){
-                switch(e.type){
-                    case project::PROJECT_EXPORT_BIN:
-                        file << "\t!ebin: ";
-                        break;
-                    case project::PROJECT_EXPORT_LIB:
-                        file << "\t!elib: ";
-                        break;
-                    case project::PROJECT_EXPORT_INCLUDE:
-                        file << "\t!einc: ";
-                        break;
-                }
-
-                file << e.name << std::endl;
-            }
-
-            file << "</module>" << std::endl;
+            file << "<!-- Module: " << m.name << " -->" << std::endl;
+            file << m.to_string();
             file << std::endl;
         }
 
+        //Close file
         file.close();
     }
 }

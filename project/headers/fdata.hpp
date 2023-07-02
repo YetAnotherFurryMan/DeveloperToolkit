@@ -51,6 +51,10 @@ namespace fdata{
         std::string name;
         std::string tmpl_name;
         std::vector<ProjectTemplateExport> exports;
+
+        dtk::ml::MLSection* dtk;
+
+        std::string to_string() const;
     };
 
     struct ProjectTemplate{
