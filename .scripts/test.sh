@@ -82,7 +82,7 @@ pr_enable(){
 }
 
 pr_disable(){
-    _pr_do $1 disabe $2
+    _pr_do $1 disable $2
 }
 
 pr_template(){
@@ -154,6 +154,9 @@ pr_template bash ../templates/c.txt
 
 pr_module make c
 pr_module bash c
+
+pr_module make cpp
+pr_module bash cpp
 
 #Test #5
 
