@@ -28,16 +28,27 @@
     <li>In the project module function ProjectTemplate::load calls dtk::log::warning (insted of dtk::log::error) in "failed to open template file" case</li>
     <li>The test script doesn't show NON_MODULAR projects' (the test objects') output now. Insted prints "Test $NAME - " and "passed" or "failed"</li>
     <li>The project's modules file uses the ml to keep data about modules in projects</li>
+    <li>Added 'help' task to the project module</li>
+    <li>Reimplemented the templates' adding process and moved to seperated task (add) with a [WHAT] parameter (template)</li>
+    <li>Reimplemented the modules' adding process and moved to seperated task (add) with a [WHAT] parameter (module)</li>
+    <li>Updated 'project info' command. Lists modules and templates. Prints warnings if 'no templates found' and 'no modules found'. Exits before listing templates and modules if the project is non-modular</li>
+    <li>Deleted link tag support for template files</li>
+    <li>Added type and priority modifiers support to template files</li>
+    <li>Added summary to test script</li>
+    <li>When a new module is in creation process, if the name was found in already existing modules then project trows a fatal error</li>
+    <li>Added 'project add library'</li>
+    <li>Added 'project add [WHAT]' for WHAT in ['binary', 'library', 'include', 'resource', 'binary_directory', 'library_directory', 'include_directory', 'resource_directory']</li>
+    <li>Added new template 'c_math'</li>
 </ol>
 
 # Todo:
 <ol>
-    <li>project keep track of used libs</li>
+    <li>DONE!</li>
 </ol>
 
 # Moved to next version
 <ol>
-    <li>Add module exporting to project</li>
+    <li>In ml subsections extends its supersection's definitions</li>
     <li>Add git support to project</li>
     <li>Add "config" section support to project</li>
     <li>Add name modifier to rule and link in template files</li>

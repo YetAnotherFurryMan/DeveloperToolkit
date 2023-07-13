@@ -20,11 +20,6 @@ char* ml_format_str_put_hex_slash(char* s, size_t* size, int v){
     *size += 5; //{size} + \\x + {v}
     s = realloc(s, (*size));
 
-    //size_t pos = strlen(s);
-    //s[pos] = '\\';
-    //s[pos + 1] = 0;
-    //strcat(s, v);
-
     char buff[5]; //\\x{v}\0
     if(v > 15)
         sprintf(buff, "\\x%x", v);

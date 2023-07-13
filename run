@@ -49,5 +49,13 @@ cp dtkmlc/dtkmlc bin/dtkmlc
 make -C project
 cp project/project bin/project
 
+#templates
+cat templates/c.dtk > templates/c_cpp_templates_collection.dtk
+echo >> templates/c_cpp_templates_collection.dtk
+cat templates/cpp.dtk >> templates/c_cpp_templates_collection.dtk
+echo >> templates/c_cpp_templates_collection.dtk
+cat templates/c_cpp.dtk >> templates/c_cpp_templates_collection.dtk
+echo >> templates/c_cpp_templates_collection.dtk
+
 #test
 bash ./.scripts/test.sh

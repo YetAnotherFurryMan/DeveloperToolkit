@@ -169,16 +169,16 @@ namespace ftemplates{
                 make << "cp " << m.name << "/" << e.name;
 
                 switch(e.type){
-                    case project::PROJECT_EXPORT_BIN:
+                    case project::PROJECT_ITEM_BIN:
                         make << " bin/";
                         break;
-                    case project::PROJECT_EXPORT_LIB:
+                    case project::PROJECT_ITEM_LIB:
                         make << " lib/";
                         break;
-                    case project::PROJECT_EXPORT_INCLUDE:
+                    case project::PROJECT_ITEM_INC:
                         make << " includes/";
                         break;
-                    case project::PROJECT_EXPORT_RES:
+                    case project::PROJECT_ITEM_RES:
                         make << " res/";
                         break;
                 }

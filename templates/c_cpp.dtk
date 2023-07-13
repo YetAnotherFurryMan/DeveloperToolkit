@@ -14,13 +14,25 @@
     <clean>
         !dir: "bin"
     </clean>
-    <rule in="src/<*>.c" out="bin/<*>.c.o">
-        !exe: "gcc -c -o <$out> <$in> <$includes>"
+    <rule in="src/<*>.c" out="bin/<*>.c.o" type="N2N" priority="0">
+        #out_prefix = "-o "
+        #lib_prefix = "-l"
+        #inc_dir_prefix = "-I "
+        #lib_dir_prefix = "-L "
+        !exe: "gcc -c <$out> <$in> <$inc_dirs>"
     </rule>
-    <rule in="src/<*>.cpp" out="bin/<*>.cpp.o">
-        !exe: "g++ -c -o <$out> <$in> <$includes>"
+    <rule in="src/<*>.cpp" out="bin/<*>.cpp.o" type="N2N" priority="0">
+        #out_prefix = "-o "
+        #lib_prefix = "-l"
+        #inc_dir_prefix = "-I "
+        #lib_dir_prefix = "-L "
+        !exe: "g++ -c <$out> <$in> <$inc_dirs>"
     </rule>
-    <link in="bin/<*>.o" out="<$name>">
-        !exe: "g++ -o <$out> <$in> <$libs>"
-    </link>
+    <rule in="bin/<*>.o" out="<$name>" type="N21" priority="0">
+        #out_prefix = "-o "
+        #lib_prefix = "-l"
+        #inc_dir_prefix = "-I "
+        #lib_dir_prefix = "-L "
+        !exe: "g++ <$out> <$in> <$lib_dirs> <$libs>"
+    </rule>
 </template>

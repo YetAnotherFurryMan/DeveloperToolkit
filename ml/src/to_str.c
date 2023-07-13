@@ -34,15 +34,20 @@ char* ml_put(struct MLAttribute* d, char* str, char* prefix, char initializer, c
 
     size_t _terminator_leng = strlen(terminator);
 
-    str = realloc(str, strlen(str) + _begin_leng + _value_leng + _terminator_leng);
+    if(_begin_leng){
+        str = realloc(str, strlen(str) + _begin_leng + 1);
+        strcat(str, _begin);
+    }
 
-    strcat(str, _begin);
-
-    if(_value_leng)
+    if(_value_leng){
+        str = realloc(str, strlen(str) + _value_leng + 1);
         strcat(str, _value);
+    }
     
-    if(_terminator_leng)
+    if(_terminator_leng){
+        str = realloc(str, strlen(str) + _terminator_leng + 1);
         strcat(str, terminator);
+    }
     
     free(_begin);
     free(_value);

@@ -95,13 +95,101 @@ namespace fdata{
         project.close();
     }
 
-    std::string ProjectModule::to_string() const{
-        char* str = (char*)malloc(1);
-        *str = 0;
+    std::vector<std::string> ProjectTemplateRule::compile_exes(const std::vector<ProjectTemplateItem> items) const{
+        std::vector<std::string> out;
+        
+        //Varibles
+        std::string _bins = "";
+        std::string _libs = "";
+        std::string _incs = "";
+        std::string _ress = "";
+        std::string _bins_raw = "";
+        std::string _libs_raw = "";
+        std::string _incs_raw = "";
+        std::string _ress_raw = "";
+        std::string _bin_dirs = "";
+        std::string _lib_dirs = "";
+        std::string _inc_dirs = "";
+        std::string _res_dirs = "";
+        std::string _bin_dirs_raw = "";
+        std::string _lib_dirs_raw = "";
+        std::string _inc_dirs_raw = "";
+        std::string _res_dirs_raw = "";
+        
+        //Load
+        for(auto& item: items){
+            switch(item.type){
+                case project::PROJECT_ITEM_BIN:
+                    _bins += bin_prefix + item.name + " ";
+                    _bins_raw += item.name + " ";
+                    break;
+                case project::PROJECT_ITEM_LIB:
+                    _libs += lib_prefix + item.name + " ";
+                    _libs_raw += item.name + " ";
+                    break;
+                case project::PROJECT_ITEM_INC:
+                    _incs += inc_prefix + item.name + " ";
+                    _incs_raw += item.name + " ";
+                    break;
+                case project::PROJECT_ITEM_RES:
+                    _ress += res_prefix + item.name + " ";
+                    _ress_raw += item.name + " ";
+                    break;
+                case project::PROJECT_ITEM_BIN_DIR:
+                    _bin_dirs += bin_dir_prefix + item.name + " ";
+                    _bin_dirs_raw += item.name + " ";
+                    break;
+                case project::PROJECT_ITEM_LIB_DIR:
+                    _lib_dirs += lib_dir_prefix + item.name + " ";
+                    _lib_dirs_raw += item.name + " ";
+                    break;
+                case project::PROJECT_ITEM_INC_DIR:
+                    _inc_dirs += inc_dir_prefix + item.name + " ";
+                    _inc_dirs_raw += item.name + " ";
+                    break;
+                case project::PROJECT_ITEM_RES_DIR:
+                    _res_dirs += res_dir_prefix + item.name + " ";
+                    _res_dirs_raw += item.name + " ";
+                    break;
+            }
+        }
 
-        str = dtk::ml::ml_put_section(dtk, str, "");
+        //Replase
+        for(auto e: exes){
+            dtk::common::str::replase_all(e, "<$bins>", _bins);
+            dtk::common::str::replase_all(e, "<$libs>", _libs);
+            dtk::common::str::replase_all(e, "<$incs>", _incs);
+            dtk::common::str::replase_all(e, "<$ress>", _ress);
 
-        return std::string(str);
+            dtk::common::str::replase_all(e, "<$bins_raw>", _bins_raw);
+            dtk::common::str::replase_all(e, "<$libs_raw>", _libs_raw);
+            dtk::common::str::replase_all(e, "<$incs_raw>", _incs_raw);
+            dtk::common::str::replase_all(e, "<$ress_raw>", _ress_raw);
+
+            dtk::common::str::replase_all(e, "<$bin_dirs>", _bin_dirs);
+            dtk::common::str::replase_all(e, "<$lib_dirs>", _lib_dirs);
+            dtk::common::str::replase_all(e, "<$inc_dirs>", _inc_dirs);
+            dtk::common::str::replase_all(e, "<$res_dirs>", _res_dirs);
+
+            dtk::common::str::replase_all(e, "<$bin_dirs_raw>", _bin_dirs_raw);
+            dtk::common::str::replase_all(e, "<$lib_dirs_raw>", _lib_dirs_raw);
+            dtk::common::str::replase_all(e, "<$inc_dirs_raw>", _inc_dirs_raw);
+            dtk::common::str::replase_all(e, "<$res_dirs_raw>", _res_dirs_raw);
+
+            dtk::common::str::replase_all(e, "<$bins_prefix>", bin_prefix);
+            dtk::common::str::replase_all(e, "<$libs_prefix>", lib_prefix);
+            dtk::common::str::replase_all(e, "<$incs_prefix>", inc_prefix);
+            dtk::common::str::replase_all(e, "<$ress_prefix>", res_prefix);
+
+            dtk::common::str::replase_all(e, "<$bin_dirs_prefix>", bin_dir_prefix);
+            dtk::common::str::replase_all(e, "<$lib_dirs_prefix>", lib_dir_prefix);
+            dtk::common::str::replase_all(e, "<$inc_dirs_prefix>", inc_dir_prefix);
+            dtk::common::str::replase_all(e, "<$res_dirs_prefix>", res_dir_prefix);
+
+            out.push_back(e);
+        }
+
+        return out;
     }
 
     std::vector<ProjectTemplate> ProjectTemplate::load(const std::string& path){
@@ -153,36 +241,29 @@ namespace fdata{
             //Load attributes
             for(size_t j = 0; j < root->sections[i]->attribute_no; j++){
                 char* val = dtk::common::common_str_copy(root->sections[i]->attributes[j]->value);
+
+                #define IF_ATTRIBUTE(ATT, VAR, TYPE) if(STRCMP_EQ(root->sections[i]->attributes[j]->name, ATT)){ tmp.VAR.push_back({ val, project::PROJECT_ITEM_##TYPE }); dtk::ml::ml_add_attribute(tmp_dtk, dtk::ml::ml_new_attribute(ATT, val)); }
+
                 if(STRCMP_EQ(root->sections[i]->attributes[j]->name, "dir")){
                     tmp.dirs.push_back(val);
                     dtk::ml::ml_add_attribute(tmp_dtk, dtk::ml::ml_new_attribute("dir", val));
-                } else if(STRCMP_EQ(root->sections[i]->attributes[j]->name, "ebin")){
-                    tmp.exports.push_back({
-                        val, 
-                        project::PROJECT_EXPORT_BIN
-                    });
-                    dtk::ml::ml_add_attribute(tmp_dtk, dtk::ml::ml_new_attribute("ebin", val));
-                } else if(STRCMP_EQ(root->sections[i]->attributes[j]->name, "elib")){
-                    tmp.exports.push_back({
-                        val, 
-                        project::PROJECT_EXPORT_LIB
-                    });
-                    dtk::ml::ml_add_attribute(tmp_dtk, dtk::ml::ml_new_attribute("elib", val));
-                } else if(STRCMP_EQ(root->sections[i]->attributes[j]->name, "einc")){
-                    tmp.exports.push_back({
-                        val, 
-                        project::PROJECT_EXPORT_INCLUDE
-                    });
-                    dtk::ml::ml_add_attribute(tmp_dtk, dtk::ml::ml_new_attribute("einc", val));
-                } else if(STRCMP_EQ(root->sections[i]->attributes[j]->name, "eres")){
-                    tmp.exports.push_back({
-                        val, 
-                        project::PROJECT_EXPORT_RES
-                    });
-                    dtk::ml::ml_add_attribute(tmp_dtk, dtk::ml::ml_new_attribute("eres", val));
-                } else{
+                } else IF_ATTRIBUTE("ebin", exports, BIN)
+                else IF_ATTRIBUTE("elib", exports, LIB)
+                else IF_ATTRIBUTE("einc", exports, INC)
+                else IF_ATTRIBUTE("eres", exports, RES)
+                else IF_ATTRIBUTE("ibin", imports, BIN)
+                else IF_ATTRIBUTE("ilib", imports, LIB)
+                else IF_ATTRIBUTE("iinc", imports, INC)
+                else IF_ATTRIBUTE("ires", imports, RES)
+                else IF_ATTRIBUTE("ibin_dir", imports, BIN_DIR)
+                else IF_ATTRIBUTE("ilib_dir", imports, LIB_DIR)
+                else IF_ATTRIBUTE("iinc_dir", imports, INC_DIR)
+                else IF_ATTRIBUTE("ires_dir", imports, RES_DIR)
+                else{
                     dtk::log::info("Ignored template attribute (\"" + std::string(dtk::common::common_str_copy(root->sections[i]->attributes[j]->name)) + "\") in file (\"" + path + "\").");
                 }
+
+                #undef IF_ATTRIBUTE
             }
 
             //Load sections
@@ -237,17 +318,59 @@ namespace fdata{
                     //Load modifiers
                     for(size_t k = 0; k < root->sections[i]->sections[j]->modifier_no; k++){
                         char* val = dtk::common::common_str_copy(root->sections[i]->sections[j]->modifiers[k]->value);
+
                         if(STRCMP_EQ(root->sections[i]->sections[j]->modifiers[k]->name, "name")){
-                            //r.name = root->sections[i]->sections[j]->modifiers[k]->value;
+                            r.name = val;
+                            dtk::ml::ml_add_modifier(s, dtk::ml::ml_new_attribute("name", val));
                         } else if(STRCMP_EQ(root->sections[i]->sections[j]->modifiers[k]->name, "in")){
                             r.in = val;
                             dtk::ml::ml_add_modifier(s, dtk::ml::ml_new_attribute("in", val));
                         } else if(STRCMP_EQ(root->sections[i]->sections[j]->modifiers[k]->name, "out")){
                             r.out = val;
                             dtk::ml::ml_add_modifier(s, dtk::ml::ml_new_attribute("out", val));
+                        } else if(STRCMP_EQ(root->sections[i]->sections[j]->modifiers[k]->name, "type")){
+                            if(STRCMP_EQ(val, "121"))
+                                r.type = project::PROJECT_RULE_121;
+                            else if(STRCMP_EQ(val, "N21"))
+                                r.type = project::PROJECT_RULE_N21;
+                            else if(STRCMP_EQ(val, "12N"))
+                                r.type = project::PROJECT_RULE_12N;
+                            else if(STRCMP_EQ(val, "N2N"))
+                                r.type = project::PROJECT_RULE_N2N;
+                            else
+                                dtk::log::error("Bad rule type '" + std::string(val) + "'", 83); //ELOAD
+                            dtk::ml::ml_add_modifier(s, dtk::ml::ml_new_attribute("type", val));
+                        } else if(STRCMP_EQ(root->sections[i]->sections[j]->modifiers[k]->name, "priority")){
+                            try{
+                                r.priority = std::stoi(val);
+                            } catch(std::exception &e){
+                                std::string exc_str = e.what();
+                                dtk::log::error("Priority conversion to int failed.\n\twhat(): " + exc_str);
+                            }
+                            dtk::ml::ml_add_modifier(s, dtk::ml::ml_new_attribute("priority", std::to_string(r.priority).c_str()));
                         } else{
                             dtk::log::info("Ignored rule modifier (\"" + std::string(dtk::common::common_str_copy(root->sections[i]->sections[j]->modifiers[k]->name)) + "\") in file (\"" + path + "\").");
                         }
+                    }
+
+                    //Load definitions
+                    for(size_t k = 0; k < root->sections[i]->sections[j]->definition_no; k++){
+                        char* val = dtk::common::common_str_copy(root->sections[i]->sections[j]->definitions[k]->value);
+
+                        #define IF_PREFIX(PREFIX, VAR) if(STRCMP_EQ(root->sections[i]->sections[j]->definitions[k]->name, PREFIX)){ VAR = val; dtk::ml::ml_add_definition(s, dtk::ml::ml_new_attribute(PREFIX, val)); }
+                        
+                        IF_PREFIX("bin_prefix", r.bin_prefix)
+                        else IF_PREFIX("lib_prefix", r.lib_prefix)
+                        else IF_PREFIX("inc_prefix", r.inc_prefix)
+                        else IF_PREFIX("res_prefix", r.res_prefix)
+                        else IF_PREFIX("bin_dir_prefix", r.bin_dir_prefix)
+                        else IF_PREFIX("lib_dir_prefix", r.lib_dir_prefix)
+                        else IF_PREFIX("inc_dir_prefix", r.inc_dir_prefix)
+                        else IF_PREFIX("res_dir_prefix", r.res_dir_prefix)
+                        else IF_PREFIX("in_prefix", r.in_prefix)
+                        else IF_PREFIX("out_prefix", r.out_prefix)
+
+                        #undef IF_PREFIX
                     }
 
                     //Load attributes
@@ -263,49 +386,6 @@ namespace fdata{
                     }
 
                     tmp.rules.push_back(r);
-                    dtk::ml::ml_add_section(tmp_dtk, s);
-                } else if(STRCMP_EQ(root->sections[i]->sections[j]->name, "link")){
-                    ProjectTemplateRule r;
-                    dtk::ml::MLSection* s = dtk::ml::ml_new_section();
-                    s->name = "link";
-
-                    //Validate
-                    if(root->sections[i]->sections[j]->section_no > 0)
-                        dtk::log::info("Ignored link sections in file (\"" + path + "\").");
-
-                    if(root->sections[i]->sections[j]->value_no > 0)
-                        dtk::log::info("Ignored link values in file (\"" + path + "\").");
-
-                    //Load modifiers
-                    for(size_t k = 0; k < root->sections[i]->sections[j]->modifier_no; k++){
-                        char* val = dtk::common::common_str_copy(root->sections[i]->sections[j]->modifiers[k]->value);
-
-                        if(STRCMP_EQ(root->sections[i]->sections[j]->modifiers[k]->name, "name")){
-                            //r.name = root->sections[i]->sections[j]->modifiers[k]->value; //TODO
-                        } else if(STRCMP_EQ(root->sections[i]->sections[j]->modifiers[k]->name, "in")){
-                            r.in = val;
-                            dtk::ml::ml_add_modifier(s, dtk::ml::ml_new_attribute("in", val));
-                        } else if(STRCMP_EQ(root->sections[i]->sections[j]->modifiers[k]->name, "out")){
-                            r.out = val;
-                            dtk::ml::ml_add_modifier(s, dtk::ml::ml_new_attribute("out", val));
-                        } else{
-                            dtk::log::info("Ignored link modifier (\"" + std::string(dtk::common::common_str_copy(root->sections[i]->sections[j]->modifiers[k]->name)) + "\") in file (\"" + path + "\").");
-                        }
-                    }
-
-                    //Load attributes
-                    for(size_t k = 0; k < root->sections[i]->sections[j]->attribute_no; k++){
-                        char* val = dtk::common::common_str_copy(root->sections[i]->sections[j]->attributes[k]->value);
-
-                        if(STRCMP_EQ(root->sections[i]->sections[j]->attributes[k]->name, "exe")){
-                            r.exes.push_back(val);
-                            dtk::ml::ml_add_attribute(s, dtk::ml::ml_new_attribute("exe", val));
-                        } else{
-                            dtk::log::info("Ignored link attribute (\"" + std::string(dtk::common::common_str_copy(root->sections[i]->sections[j]->attributes[k]->name)) + "\") in file (\"" + path + "\").");
-                        }
-                    }
-
-                    tmp.links.push_back(r);
                     dtk::ml::ml_add_section(tmp_dtk, s);
                 } else if(STRCMP_EQ(root->sections[i]->sections[j]->name, "clean")){
                     ProjectTemplateCleanRule r;
@@ -364,25 +444,12 @@ namespace fdata{
         return std::string(str);
     }
 
-    void inpostprocess(std::string& s, const std::string& in,
-                                     const std::string& out,
-                                     const std::string& star
-                    ){
-        dtk::common::str::replase_all(s, "<$in>", in);
-        dtk::common::str::replase_all(s, "<$out>", out);
-
-        dtk::common::str::replase_all(s, "<*>", star);
-    }
-
-    void postprocess(std::string& s, const std::string& name,
-                                     const std::string& includes, 
-                                     const std::string& libs,
-                                     const std::string& build
-                    ){
+    void postprocess(
+        std::string& s,
+        const std::string& name,
+        const std::string& build
+    ){
         dtk::common::str::replase_all(s, "<$name>", name);
-
-        dtk::common::str::replase_all(s, "<$includes>", includes);
-        dtk::common::str::replase_all(s, "<$libs>", libs);
         dtk::common::str::replase_all(s, "<$build>", build);
 
         dtk::common::str::replase_all(s, "<$lt>", "<");
@@ -405,166 +472,8 @@ namespace fdata{
         for(auto& f: files)
             c.files.emplace_back(prefix + f.name, f.cnt);
         
-        //Prepare build file
-        std::string build_name;
-        std::stringstream build;
-        if(b == project::PROJECT_BUILD_MAKE){
-            build_name = "makefile";
-
-            //Varibles
-            build << "name := " << name << std::endl;
-            build << std::endl;
-
-            //All
-            build << ".PHONY: all" << std::endl;
-            build << "all: clean dir ";
-            for(auto& e: exports)
-                build << e.name << " ";
-            build << std::endl << std::endl;
-
-            //Prepare clean
-            build << "clean:" << std::endl;
-            build << "\t@echo Cleaning $(name)" << std::endl;
-            for(auto& d: clean.dirs)
-                build << "\t@rm -fr " << d << "/*" << std::endl;
-            for(auto& f: clean.files)
-                build << "\t@rm -f " << f << std::endl;
-            for(auto e: clean.exes){
-                inpostprocess(e, "", "$@", "%");
-                build << "\t@" << e << std::endl;
-            }
-            build << std::endl;
-
-            //Prepare directories
-            build << "dir: ";
-            for(auto& d: dirs)
-                build << d << " ";
-            build << std::endl << std::endl;
-            for(auto& d: dirs)
-                build << d << " ";
-            build << ":" << std::endl;
-            build << "\t@mkdir $@" << std::endl;
-            build << std::endl;
-
-            //Prepare rules and in and out varibles
-            std::string var_in = "in := ";
-            std::string var_out = "out := ";
-            std::stringstream tmp;
-            for(auto& r: rules){
-                std::string rule = r.out + ": " + r.in;
-                inpostprocess(rule, "", "", "%");
-
-                tmp << rule << std::endl;
-                tmp << "\t@echo Compiling $^" << std::endl;
-                for(auto e: r.exes){
-                    inpostprocess(e, "$^", "$@", "%");
-                    tmp << "\t@" << e << std::endl;
-                }
-                tmp << std::endl;
-
-                //Add to in and out
-                auto in = r.in;
-                inpostprocess(in, "", "", "*");
-
-                var_in += "$(wildcard " + in + ") ";
-                var_out += "$(patsubst " + r.in + "," + r.out + ",$(wildcard " + in + ")) ";
-            }
-
-            inpostprocess(var_out, "", "", "%");
-
-            build << var_in << std::endl;
-            build << var_out << std::endl;
-            build << std::endl;
-
-            build << tmp.str();
-
-            //Prepare links
-            for(auto& l: links){
-                auto in = l.in;
-                inpostprocess(in, "", "", "%");
-
-                build << l.out << ": $(filter " << in << ", $(out))" << std::endl;
-                build << "\t@echo Linking $@" << std::endl;
-                for(auto e: l.exes){
-                    inpostprocess(e, "$^", "$@", "%");
-                    build << "\t@" << e << std::endl;
-                }
-                build << std::endl;
-            }
-        } else if(b == project::PROJECT_BUILD_BASH){
-            if(fast)
-                build_name = ".scripts/";
-            build_name += "make.sh";
-
-            //Varibles
-            build << "name=" << name << std::endl;
-            build << std::endl;
-
-            //Prepare clean
-            build << "#Clean:" << std::endl;
-            build << "echo Cleaning $name" << std::endl;
-            for(auto& d: clean.dirs)
-                build << "rm -fr " << d << "/*" << std::endl;
-            for(auto& f: clean.files)
-                build << "rm -f " << f << std::endl;
-            for(auto e: clean.exes){
-                inpostprocess(e, "", "clean", "*");
-                build << e << std::endl;
-            }
-            build << std::endl;
-
-            //Prepare directories
-            build << "#Directories:" << std::endl;
-            for(auto& d: dirs)
-                build << "mkdir " << d << " 2>/dev/null" << std::endl;
-            build << std::endl;
-
-            //Prepare rules
-            build << "#Rules:" << std::endl;
-            build << "shopt -s nullglob" << std::endl;
-            build << std::endl;
-            for(auto& r: rules){
-                auto in = r.in;
-                inpostprocess(in, "", "", "*");
-
-                build << "set -- " << in << std::endl;
-                build << "if [ \"$#\" -gt 0 ]; then" << std::endl;
-                build << "\tfor file in " << in << "; do" << std::endl;
-                build << "\t\techo Compiling $file" << std::endl;
-
-                //Calculating out varible
-                auto out = r.out;
-                auto star = r.in.find("<*>");
-                dtk::common::str::replase_all(out, "<*>", std::string("${file#\"") + r.in.substr(0, star) + "\"};out=${out%\"" + r.in.substr(star + 3) + "\"}");
-                build << "\t\tout=" << out << std::endl;
-
-                for(auto e: r.exes){
-                    inpostprocess(e, "$file", "$out", "*");
-                    build << "\t\t" << e << std::endl;
-                }
-
-                build << "\tdone" << std::endl;
-                build << "fi" << std::endl;
-                build << std::endl;
-            }
-
-            build << "shopt -u nullglob" << std::endl;
-            build << std::endl;
-
-            //Prepare links
-            build << "#Links:" << std::endl;
-            build << std::endl;
-            for(auto& l: links){
-                build << "echo Linking " << l.out << std::endl;
-                for(auto e: l.exes){
-                    inpostprocess(e, l.in, l.out, "*");
-                    build << e << std::endl;
-                }
-                build << std::endl;
-            }
-        }
-
-        c.files.emplace_back(prefix + build_name, build.str());
+        //Add build file
+        c.files.push_back(compile_rules(name, b, fast));
 
         //Posprocess
         std::string var_name = name;
@@ -572,16 +481,13 @@ namespace fdata{
             var_name = "$(name)";
         else if(b == project::PROJECT_BUILD_BASH)
             var_name = "$name";
-        
-        std::string var_includes = (!fast)?"-I ../includes":"";
-        std::string var_libs = (!fast)?"-L ../libs":"";
 
         for(auto& d: c.dirs)
-            postprocess(d, var_name, var_includes, var_libs, std::to_string(b));
+            postprocess(d, var_name, std::to_string(b));
 
         for(auto& f: c.files){
-            postprocess(f.name, var_name, var_includes, var_libs, std::to_string(b));
-            postprocess(f.cnt, var_name, var_includes, var_libs, std::to_string(b));
+            postprocess(f.name, var_name, std::to_string(b));
+            postprocess(f.cnt, var_name, std::to_string(b));
         }
 
         return c;
@@ -599,19 +505,51 @@ namespace fdata{
         dtk::ml::ml_add_modifier(m_dtk, dtk::ml::ml_new_attribute("template", this->name.c_str()));
 
         for(auto e: exports){
-            postprocess(e.name, name, "", "", std::to_string(b));
+            postprocess(e.name, name, std::to_string(b));
             m.exports.push_back(e);
 
             char* att_name = "ebin";
             switch(e.type){
-                case project::PROJECT_EXPORT_LIB:
+                case project::PROJECT_ITEM_LIB:
                     att_name = "elib";
                     break;
-                case project::PROJECT_EXPORT_INCLUDE:
+                case project::PROJECT_ITEM_INC:
                     att_name = "einc";
                     break;
-                case project::PROJECT_EXPORT_RES:
+                case project::PROJECT_ITEM_RES:
                     att_name = "eres";
+                    break;
+            }
+
+            dtk::ml::ml_add_attribute(m_dtk, dtk::ml::ml_new_attribute(att_name, e.name.c_str()));
+        }
+
+        for(auto e: imports){
+            postprocess(e.name, name, std::to_string(b));
+            m.imports.push_back(e);
+
+            char* att_name = "ibin";
+            switch(e.type){
+                case project::PROJECT_ITEM_LIB:
+                    att_name = "ilib";
+                    break;
+                case project::PROJECT_ITEM_INC:
+                    att_name = "iinc";
+                    break;
+                case project::PROJECT_ITEM_RES:
+                    att_name = "ires";
+                    break;
+                case project::PROJECT_ITEM_BIN_DIR:
+                    att_name = "ibin_dir";
+                    break;
+                case project::PROJECT_ITEM_LIB_DIR:
+                    att_name = "ilib_dir";
+                    break;
+                case project::PROJECT_ITEM_INC_DIR:
+                    att_name = "iinc_dir";
+                    break;
+                case project::PROJECT_ITEM_RES_DIR:
+                    att_name = "ires_dir";
                     break;
             }
 
@@ -621,6 +559,246 @@ namespace fdata{
         m.dtk = m_dtk;
 
         return m;
+    }
+
+    ProjectTemplateFile ProjectTemplate::compile_rules(const std::string& name, project::build b, bool fast) const{
+        auto r = compile_rules(name, b, fast, *this, this->imports);
+        r.name = name + "/" + r.name;
+        return r;
+    }
+
+    ProjectTemplateFile ProjectTemplate::compile_rules(const std::string& name, project::build b, bool fast, const ProjectTemplate& temp, const std::vector<ProjectTemplateItem>& imp){
+        //Complete imports if !fast
+        auto imports = imp;
+        if(!fast){
+            imports.push_back({"../bin", project::PROJECT_ITEM_BIN_DIR});
+            imports.push_back({"../lib", project::PROJECT_ITEM_LIB_DIR});
+            imports.push_back({"../include", project::PROJECT_ITEM_INC_DIR});
+            imports.push_back({"../res", project::PROJECT_ITEM_RES_DIR});
+        }
+
+        ProjectTemplateFile file;
+
+        //Choose file name
+        switch(b){
+            case project::PROJECT_BUILD_MAKE:
+                file.name = "makefile";
+                break;
+            case project::PROJECT_BUILD_BASH:
+                if(fast)
+                    file.name = ".scripts/make.sh";
+                else
+                    file.name = "make.sh";
+                break;
+        }
+
+        //Compile rules to file
+        auto rules = temp.rules;
+        
+        std::stringstream ss;
+
+        if(b == project::PROJECT_BUILD_MAKE){
+            //Rules, in and out
+            std::string in = "in :=";
+            std::string out = "out :=";
+            std::stringstream compiled;
+            
+            for(size_t i = 0; i < rules.size(); i++){
+                int rule = 0;
+                for(size_t j = 0; j < rules.size(); j++){
+                    if(rules[rule].priority < rules[j].priority)
+                        rule = j;
+                    else if(rules[rule].type < rules[j].type && rules[rule].priority == rules[j].priority)
+                        rule = j;
+                }
+
+                std::string wildcard = "$(wildcard " + rules[rule].in + ")";
+                dtk::common::str::replase_all(wildcard, "<*>", "*");
+                in += " " + wildcard;
+                if(rules[rule].type == project::PROJECT_RULE_12N || rules[rule].type == project::PROJECT_RULE_N2N)
+                    out += " $(patsubst " + rules[rule].in + "," + rules[rule].out + "," + wildcard + ")";
+                else
+                    out += " " + rules[rule].out;
+
+                std::string label = rules[rule].out;
+                if(rules[rule].type == project::PROJECT_RULE_N21)
+                    label += ": $(filter " + rules[rule].in + ", $(out) $(in))";
+                else
+                    label += ": " + rules[rule].in;
+                dtk::common::str::replase_all(label, "<*>", "%");
+
+                if(!rules[rule].name.empty())
+                    compiled << rules[rule].name << ": ";
+                compiled << label << std::endl;
+
+                std::string _in = "$^";
+                if(rules[rule].in_prefix != ""){
+                    if(rules[rule]. type == project::PROJECT_RULE_N21 || rules[rule].type == project::PROJECT_RULE_N2N)
+                        _in = "$(foreach x," + rules[rule].in_prefix + "$(x), $^)";
+                    else
+                        _in = rules[rule].in_prefix + "$^";
+                }
+
+                std::string _out = rules[rule].out_prefix + "$@";
+                if(rules[rule].out_prefix != ""){
+                    _out = rules[rule].out_prefix + "$@";
+                }
+
+                auto exes = rules[rule].compile_exes(imports);
+                
+                for(auto& exe: exes){
+                    dtk::common::str::replase_all(exe, "<$in>", _in);
+                    dtk::common::str::replase_all(exe, "<$out>", _out);
+                    dtk::common::str::replase_all(exe, "<*>", "*");
+
+                    compiled << "\t@" << exe << std::endl;
+                }
+
+                compiled << std::endl;
+
+                rules[rule].priority = -1;
+            }
+
+            dtk::common::str::replase_all(out, "<*>", "%");
+
+            //Head
+            ss << "name := " << name << std::endl;
+            ss << in << std::endl;
+            ss << out << std::endl;
+            ss << std::endl;
+            ss << ".PHONY: all" << std::endl;
+            ss << "all: clean dir $(out)" << std::endl;
+            ss << std::endl;
+
+            //Clean
+            ss << "clean:" << std::endl;
+            ss << "\t@echo Cleaning $(name)" << std::endl;
+
+            for(auto& d: temp.clean.dirs)
+                ss << "\t@rm -fr " << d << std::endl;
+
+            for(auto& f: temp.clean.files)
+                ss << "\t@rm -f " << f << std::endl;
+
+            for(auto e: temp.clean.exes){
+                dtk::common::str::replase_all(e, "<*>", "*");
+                ss << "\t@" << e << std::endl;
+            }
+
+            ss << std::endl;
+
+            //Directories
+            ss << "dir: ";
+
+            for(auto& d: temp.dirs)
+                ss << d << " ";
+
+            ss << std::endl << std::endl;
+
+            for(auto& d: temp.dirs)
+                ss << d << " ";
+
+            ss << ":" << std::endl;
+            ss << "\t@mkdir $@" << std::endl;
+            ss << std::endl;
+
+            //Add compiled rules
+            ss << compiled.str();
+        } else if(b == project::PROJECT_BUILD_BASH){
+            //Head
+            ss << "name=" << name << std::endl;
+            ss << std::endl;
+
+            //Clean
+            ss << "#Clean:" << std::endl;
+            ss << "echo Cleaning $name" << std::endl;
+
+            for(auto& d: temp.clean.dirs)
+                ss << "rm -fr " << d << std::endl;
+
+            for(auto& f: temp.clean.files)
+                ss << "rm -f " << f << std::endl;
+
+            for(auto e: temp.clean.exes){
+                dtk::common::str::replase_all(e, "<*>", "*");
+                ss << e << std::endl;
+            }
+
+            ss << std::endl;
+
+            //Directories
+            ss << "#Directories:" << std::endl;
+
+            for(auto& d: temp.dirs)
+                ss << "mkdir " << d << " 2>/dev/null" << std::endl;
+
+            ss << std::endl;
+
+            //Rules
+            ss << "#Rules:" << std::endl;
+            ss << "shopt -s nullglob" << std::endl;
+            ss << std::endl;
+
+            for(size_t i = 0; i < rules.size(); i++){
+                int rule = 0;
+                for(size_t j = 0; j < rules.size(); j++){
+                    if(rules[rule].priority < rules[j].priority)
+                        rule = j;
+                    else if(rules[rule].type < rules[j].type && rules[rule].priority == rules[j].priority)
+                        rule = j;
+                }
+
+                auto exes = rules[rule].compile_exes(imports);
+
+                switch(rules[rule].type){
+                    case project::PROJECT_RULE_121:
+                    case project::PROJECT_RULE_N21:
+                        for(auto& e: exes){
+                            dtk::common::str::replase_all(e, "<$in>", rules[rule].in_prefix + rules[rule].in);
+                            dtk::common::str::replase_all(e, "<$out>", rules[rule].out_prefix + rules[rule].out);
+
+                            ss << e << std::endl;
+                        }
+                        break;
+                    case project::PROJECT_RULE_12N:
+                    case project::PROJECT_RULE_N2N:
+                        ss << "set -- " << rules[rule].in << std::endl;
+                        ss << "if [ \"$#\" -gt 0 ]" << std::endl;
+                        ss << "then" << std::endl;
+                        ss << "\tfor file in " << rules[rule].in << std::endl;
+                        ss << "\tdo" << std::endl;
+
+                        //Out varible
+                        auto out = rules[rule].out;
+                        auto star = rules[rule].in.find("<*>");
+                        dtk::common::str::replase_all(out, "<*>", std::string("${file#\"") + rules[rule].in.substr(0, star) + "\"};out=${out%\"" + rules[rule].in.substr(star + 3) + "\"}");
+                        
+                        ss << "\t\tout=" << out << std::endl;
+
+                        for(auto& e: exes){
+                            dtk::common::str::replase_all(e, "<$in>", rules[rule].in_prefix + "$file");
+                            dtk::common::str::replase_all(e, "<$out>", rules[rule].out_prefix + "$out");
+
+                            ss << "\t\t" << e << std::endl;
+                        }
+
+                        ss << "\tdone" << std::endl;
+                        ss << "fi" << std::endl;
+                        break;
+                }
+
+                ss << std::endl;
+                rules[rule].priority = -1;
+            }
+
+            ss << "shopt -u nullglob" << std::endl;
+            ss << std::endl;
+        }
+
+        file.cnt = ss.str();
+        dtk::common::str::replase_all(file.cnt, "<*>", "*");
+
+        return file;
     }
 
     ProjectModulesFile::ProjectModulesFile(const std::string& path){
@@ -682,27 +860,75 @@ namespace fdata{
                 if(STRCMP_EQ(root->sections[i]->attributes[j]->name, "ebin")){
                     mod.exports.push_back({
                         val, 
-                        project::PROJECT_EXPORT_BIN
+                        project::PROJECT_ITEM_BIN
                     });
                     dtk::ml::ml_add_attribute(mod_dtk, dtk::ml::ml_new_attribute("ebin", val));
                 } else if(STRCMP_EQ(root->sections[i]->attributes[j]->name, "elib")){
                     mod.exports.push_back({
                         val, 
-                        project::PROJECT_EXPORT_LIB
+                        project::PROJECT_ITEM_LIB
                     });
                     dtk::ml::ml_add_attribute(mod_dtk, dtk::ml::ml_new_attribute("elib", val));
                 } else if(STRCMP_EQ(root->sections[i]->attributes[j]->name, "einc")){
                     mod.exports.push_back({
                         val, 
-                        project::PROJECT_EXPORT_INCLUDE
+                        project::PROJECT_ITEM_INC
                     });
                     dtk::ml::ml_add_attribute(mod_dtk, dtk::ml::ml_new_attribute("einc", val));
                 } else if(STRCMP_EQ(root->sections[i]->attributes[j]->name, "eres")){
                     mod.exports.push_back({
                         val, 
-                        project::PROJECT_EXPORT_RES
+                        project::PROJECT_ITEM_RES
                     });
                     dtk::ml::ml_add_attribute(mod_dtk, dtk::ml::ml_new_attribute("eres", val));
+                } else if(STRCMP_EQ(root->sections[i]->attributes[j]->name, "ibin")){
+                    mod.imports.push_back({
+                        val, 
+                        project::PROJECT_ITEM_BIN
+                    });
+                    dtk::ml::ml_add_attribute(mod_dtk, dtk::ml::ml_new_attribute("ibin", val));
+                } else if(STRCMP_EQ(root->sections[i]->attributes[j]->name, "ilib")){
+                    mod.imports.push_back({
+                        val, 
+                        project::PROJECT_ITEM_LIB
+                    });
+                    dtk::ml::ml_add_attribute(mod_dtk, dtk::ml::ml_new_attribute("ilib", val));
+                } else if(STRCMP_EQ(root->sections[i]->attributes[j]->name, "iinc")){
+                    mod.imports.push_back({
+                        val, 
+                        project::PROJECT_ITEM_INC
+                    });
+                    dtk::ml::ml_add_attribute(mod_dtk, dtk::ml::ml_new_attribute("iinc", val));
+                } else if(STRCMP_EQ(root->sections[i]->attributes[j]->name, "ires")){
+                    mod.imports.push_back({
+                        val, 
+                        project::PROJECT_ITEM_RES
+                    });
+                    dtk::ml::ml_add_attribute(mod_dtk, dtk::ml::ml_new_attribute("ires", val));
+                } else if(STRCMP_EQ(root->sections[i]->attributes[j]->name, "ibin_dir")){
+                    mod.imports.push_back({
+                        val, 
+                        project::PROJECT_ITEM_BIN_DIR
+                    });
+                    dtk::ml::ml_add_attribute(mod_dtk, dtk::ml::ml_new_attribute("ibin_dir", val));
+                } else if(STRCMP_EQ(root->sections[i]->attributes[j]->name, "ilib_dir")){
+                    mod.imports.push_back({
+                        val, 
+                        project::PROJECT_ITEM_LIB_DIR
+                    });
+                    dtk::ml::ml_add_attribute(mod_dtk, dtk::ml::ml_new_attribute("ilib_dir", val));
+                } else if(STRCMP_EQ(root->sections[i]->attributes[j]->name, "iinc_dir")){
+                    mod.imports.push_back({
+                        val, 
+                        project::PROJECT_ITEM_INC_DIR
+                    });
+                    dtk::ml::ml_add_attribute(mod_dtk, dtk::ml::ml_new_attribute("iinc_dir", val));
+                } else if(STRCMP_EQ(root->sections[i]->attributes[j]->name, "ires_dir")){
+                    mod.imports.push_back({
+                        val, 
+                        project::PROJECT_ITEM_RES_DIR
+                    });
+                    dtk::ml::ml_add_attribute(mod_dtk, dtk::ml::ml_new_attribute("ires_dir", val));
                 } else{
                     dtk::log::info("Ignored module's attribute (\"" + std::string(dtk::common::common_str_copy(root->sections[i]->attributes[j]->name)) + "\") in file (\"" + path + "\").");
                 }
@@ -711,6 +937,69 @@ namespace fdata{
             mod.dtk = mod_dtk;
             this->modules.push_back(mod);
         }
+    }
+
+    std::string ProjectModule::to_string() const{
+        char* str = (char*)malloc(1);
+        *str = 0;
+
+        str = dtk::ml::ml_put_section(dtk, str, "");
+
+        return std::string(str);
+    }
+
+    void ProjectModule::add_import(const std::string& val, project::item_type t, project::build b, const ProjectTemplate& tmpl){
+        if(tmpl.name != tmpl_name)
+            return;
+        
+        const char* att = "ibin";
+        
+        switch(t){
+            case project::PROJECT_ITEM_LIB:
+                att = "ilib";
+                break;
+            case project::PROJECT_ITEM_INC:
+                att = "iinc";
+                break;
+            case project::PROJECT_ITEM_RES:
+                att = "ires";
+                break;
+            case project::PROJECT_ITEM_BIN_DIR:
+                att = "ibin_dir";
+                break;
+            case project::PROJECT_ITEM_LIB_DIR:
+                att = "ilib_dir";
+                break;
+            case project::PROJECT_ITEM_INC_DIR:
+                att = "iinc_dir";
+                break;
+            case project::PROJECT_ITEM_RES_DIR:
+                att = "ires_dir";
+                break;
+        }
+
+        //Add import
+        imports.push_back({val, t});
+        dtk::ml::ml_add_attribute(dtk, dtk::ml::ml_new_attribute(att, val.c_str()));
+
+        //Update build file
+        auto file = ProjectTemplate::compile_rules(name, b, false, tmpl, imports);
+        file.name = name + "/" + file.name;
+
+        //Posprocess
+        std::string var_name = name;
+        if(b == project::PROJECT_BUILD_MAKE)
+            var_name = "$(name)";
+        else if(b == project::PROJECT_BUILD_BASH)
+            var_name = "$name";
+
+        postprocess(file.name, var_name, std::to_string(b));
+        postprocess(file.cnt, var_name, std::to_string(b));
+                                    
+        std::ofstream ofs(file.name);
+        FILE_OK(ofs)
+        ofs << file.cnt;
+        ofs.close();
     }
 
     void ProjectModulesFile::update(){

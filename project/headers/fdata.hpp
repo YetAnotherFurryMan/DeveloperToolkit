@@ -25,9 +25,9 @@ namespace fdata{
         std::string cnt;
     };
 
-    struct ProjectTemplateExport{
+    struct ProjectTemplateItem{
         std::string name;
-        project::export_type type;
+        project::item_type type;
     };
 
     struct ProjectCompiledTemplate{
@@ -42,20 +42,31 @@ namespace fdata{
     };
 
     struct ProjectTemplateRule{
+        std::string name;
+        project::rule_type type = project::PROJECT_RULE_N2N;
+        int priority = 0;
+        
         std::string in;
         std::string out;
         std::vector<std::string> exes;
+
+        std::string bin_prefix = "";
+        std::string lib_prefix = "";
+        std::string inc_prefix = "";
+        std::string res_prefix = "";
+
+        std::string bin_dir_prefix = "";
+        std::string lib_dir_prefix = "";
+        std::string inc_dir_prefix = "";
+        std::string res_dir_prefix = "";
+
+        std::string in_prefix = "";
+        std::string out_prefix = "";
+
+        std::vector<std::string> compile_exes(const std::vector<ProjectTemplateItem> items) const;
     };
 
-    struct ProjectModule{
-        std::string name;
-        std::string tmpl_name;
-        std::vector<ProjectTemplateExport> exports;
-
-        dtk::ml::MLSection* dtk;
-
-        std::string to_string() const;
-    };
+    struct ProjectModule;
 
     struct ProjectTemplate{
         std::string name;
@@ -63,8 +74,8 @@ namespace fdata{
         std::vector<std::string> dirs;
         std::vector<ProjectTemplateFile> files;
         std::vector<ProjectTemplateRule> rules;
-        std::vector<ProjectTemplateRule> links;
-        std::vector<ProjectTemplateExport> exports;
+        std::vector<ProjectTemplateItem> exports;
+        std::vector<ProjectTemplateItem> imports;
 
         ProjectTemplateCleanRule clean;
 
@@ -75,6 +86,21 @@ namespace fdata{
         std::string to_string() const;
         ProjectCompiledTemplate compile(const std::string& name, project::build b, bool fast = false) const;
         ProjectModule get_module(const std::string& name, project::build b) const;
+
+        ProjectTemplateFile compile_rules(const std::string& name, project::build b, bool fast) const;
+        static ProjectTemplateFile compile_rules(const std::string& name, project::build b, bool fast, const ProjectTemplate& template_file, const std::vector<ProjectTemplateItem>& imports);
+    };
+
+    struct ProjectModule{
+        std::string name;
+        std::string tmpl_name;
+        std::vector<ProjectTemplateItem> exports;
+        std::vector<ProjectTemplateItem> imports;
+
+        dtk::ml::MLSection* dtk;
+
+        std::string to_string() const;
+        void add_import(const std::string& val, project::item_type type, project::build build, const ProjectTemplate& tmpl);
     };
 
     struct ProjectModulesFile{

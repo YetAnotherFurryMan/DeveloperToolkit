@@ -14,10 +14,52 @@
     <clean>
         !dir: "bin"
     </clean>
-    <rule in="src/<*>.c" out="bin/<*>.c.o">
-        !exe: "gcc -c -o <$out> <$in> <$includes>"
+    <rule in="src/<*>.c" out="bin/<*>.c.o"  type="N2N" priority="0">
+        #out_prefix = "-o "
+        #lib_prefix = "-l"
+        #inc_dir_prefix = "-I "
+        #lib_dir_prefix = "-L "
+        !exe: "gcc -c <$out> <$in> <$inc_dirs>"
     </rule>
-    <link in="bin/<*>.o" out="<$name>">
-        !exe: "gcc -o <$out> <$in> <$libs>"
-    </link>
+    <rule in="bin/<*>.o" out="<$name>" type="N21" priority="0">
+        #out_prefix = "-o "
+        #lib_prefix = "-l"
+        #inc_dir_prefix = "-I "
+        #lib_dir_prefix = "-L "
+        !exe: "gcc <$out> <$in> <$lib_dirs> <$libs>"
+    </rule>
+</template>
+<template name="c_math">
+    !dir: "bin"
+    !dir: "src"
+    !dir: "headers"
+    !ebin: "<$name>"
+    !ilib: "m"
+    <file name="src/main.c">
+        '#include <stdlib.h>
+        '#include <stdio.h>
+        '#include <math.h>
+        '
+        'int main(int argc, char** argv){
+        '    int num = 64;
+        '    if(argc > 1)
+        '        num = atoi(argv[1]);
+        '    printf("%f\\n", sqrt(num));
+        '    return 0;
+        '}
+    </file>
+    <clean>
+        !dir: "bin"
+    </clean>
+    <rule in="src/<*>.c" out="bin/<*>.c.o"  type="N2N" priority="0">
+        #out_prefix = "-o "
+        #inc_dir_prefix = "-I "
+        !exe: "gcc -c <$out> <$in> <$inc_dirs>"
+    </rule>
+    <rule in="bin/<*>.o" out="<$name>" type="N21" priority="0">
+        #out_prefix = "-o "
+        #lib_prefix = "-l"
+        #lib_dir_prefix = "-L "
+        !exe: "gcc <$out> <$in> <$lib_dirs> <$libs>"
+    </rule>
 </template>

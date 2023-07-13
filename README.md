@@ -72,6 +72,7 @@ Tasks:
     </ul>
   </li>
   <li>disable - oposite for enable.</li>
-  <li>template - adds a template file to the '.project/templates' file.</li>
+  <li>add template - adds a template file to the '.project/templates' file.</li>
   <li>module - creates a new module (following the choosen template-file) and adds it to the project.</li>
+  <li>help - print hepl page and exits.</li>
 </ol>

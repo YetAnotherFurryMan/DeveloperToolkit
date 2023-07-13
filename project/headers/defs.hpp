@@ -21,9 +21,20 @@ namespace project{
     } enable;
 
     typedef enum{
-        PROJECT_EXPORT_BIN,
-        PROJECT_EXPORT_LIB,
-        PROJECT_EXPORT_INCLUDE,
-        PROJECT_EXPORT_RES
-    } export_type;
+        PROJECT_ITEM_BIN,
+        PROJECT_ITEM_LIB,
+        PROJECT_ITEM_INC,
+        PROJECT_ITEM_RES,
+        PROJECT_ITEM_BIN_DIR,
+        PROJECT_ITEM_LIB_DIR,
+        PROJECT_ITEM_INC_DIR,
+        PROJECT_ITEM_RES_DIR
+    } item_type;
+
+    typedef enum{
+        PROJECT_RULE_121 = 2,
+        PROJECT_RULE_12N = 3,
+        PROJECT_RULE_N21 = 0,
+        PROJECT_RULE_N2N = 1
+    } rule_type;
 }
