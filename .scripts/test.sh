@@ -22,13 +22,14 @@ _dtkmlc xml test
 
 #Functions
 _pr_init(){
-    ../bin/project init -n $1 -b $2 $3 -T ../templates/cpp.dtk -T ../templates/c.dtk
+    ../bin/project init -n $1 -b $2 $3
 }
 
 pr_init(){
     _pr_init $1 $1 ""
-    _pr_init $1_c $1 "-t c"
-    _pr_init $1_cpp $1 "-t cpp"
+    _pr_init $1_c $1 "-t c -T ../templates/c.dtk"
+    _pr_init $1_c_m $1 "-t c_math -T ../templates/c.dtk"
+    _pr_init $1_cpp $1 "-t cpp -T ../templates/cpp.dtk"
 }
 
 _run(){
@@ -43,11 +44,35 @@ _exe(){
     cd ..
 }
 
-_test(){
+_exe2(){
+    cd $1
+    ./$1 $2
+    cd ..
+}
+
+test_count=0
+test_passed=0
+
+_test_hello_world(){
     echo -n "Testing $1 - "
+    let "test_count += 1"
     if [[ $2 == "Hello World!" ]]
     then
         echo Passed
+        let "test_passed += 1"
+    else
+        echo Failed
+    fi
+}
+
+_test_math(){
+    echo -n "Testing $1 - "
+    let "test_count += 1"
+    excepted=`echo "scale=6; sqrt($3)" | bc`
+    if [[ $2 == $excepted ]]
+    then
+        echo Passed
+        let "test_passed += 1"
     else
         echo Failed
     fi
@@ -57,9 +82,13 @@ test(){
     echo Running { $1* }
     _run $1
     _run $1_c
+    _run $1_c_m
     _run $1_cpp
-    _test "C" "$(_exe $1_c)"
-    _test "C++" "$(_exe $1_cpp)"
+    _test_hello_world "C" "$(_exe $1_c)"
+    _test_hello_world "C++" "$(_exe $1_cpp)"
+    _test_math "C Math" "$(_exe $1_c_m)" 64
+    _test_math "C Math (4)" "$(_exe2 $1_c_m 4)" 4
+    _test_math "C Math (256)" "$(_exe2 $1_c_m 256)" 256
 }
 
 _pr(){
@@ -85,15 +114,26 @@ pr_disable(){
     _pr_do $1 disable $2
 }
 
-pr_template(){
-    echo project { $1 } template -T $2
-    _pr $1 template "-T $2"
+pr_add(){
+    echo project { $1 } add $2 $3
+    _pr $1 add "$2 $3"
 }
 
-pr_module(){
-    echo project { $1 } module -n module_$2 -t $2
-    _pr $1 module "-n module_$2 -t $2"
+pr_add_template(){
+    pr_add $1 template $2
 }
+
+pr_add_filtered_templates(){
+    pr_add $1 template "$2 $3"
+}
+
+pr_add_module(){
+    pr_add $1 module "-n module_$2 -t $2"
+}
+
+#project help
+../bin/project
+../bin/project help
 
 #project init
 
@@ -145,23 +185,30 @@ pr_disable bash log
 test make
 test bash
 
-#project template
+#project add template
 
-pr_template make ../templates/c.txt
-pr_template bash ../templates/c.txt
+pr_add_template make ../../templates/c.dtk
+pr_add_template bash ../../templates/c.dtk
+
+pr_add_filtered_templates make ../../templates/c_cpp_templates_collection.dtk "-n cpp"
+pr_add_filtered_templates bash ../../templates/c_cpp_templates_collection.dtk "-n cpp"
 
 #project module
 
-pr_module make c
-pr_module bash c
+pr_add_module make c
+pr_add_module bash c
 
-pr_module make cpp
-pr_module bash cpp
+pr_add_module make cpp
+pr_add_module bash cpp
 
 #Test #5
 
 test make
 test bash
+
+#Summary
+
+echo Summary $test_passed / $test_count
 
 #Leave test
 cd ..
