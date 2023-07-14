@@ -72,7 +72,19 @@ Tasks:
     </ul>
   </li>
   <li>disable - oposite for enable.</li>
-  <li>add template - adds a template file to the '.project/templates' file.</li>
-  <li>module - creates a new module (following the choosen template-file) and adds it to the project.</li>
+  <li>add - adds [WHAT] to the project or to the selected module.
+    <ul>
+      <li>template - adds a template file to the '.project/templates' file.</li>
+      <li>module - adds a new module (following the choosen template-file).</li>
+      <li>binary - adds a selected binary file to the binarys' list in the project's modules or one selected module.</li>
+      <li>library - adds a selected library file (or simply name in C/C++ case) to the librarys' list in the project's modules or one selected module.</li>
+      <li>include - adds a selected header file to the includes' list in the project's modules or one selected module.</li>
+      <li>resource - adds a selected resource file to the resources' list in the project's modules or one selected module.</li>
+      <li>binary_directory - adds a selected directory file to the binarys' directories list in the project's modules or one selected module.</li>
+      <li>library_directory - adds a selected directory file (or simply name in C/C++ case) to the librarys' directories list in the project's modules or one selected module.</li>
+      <li>include_directory - adds a selected directory file to the includes' directories list in the project's modules or one selected module.</li>
+      <li>resource_directory - adds a selected directory file to the resources' directories list in the project's modules or one selected module.</li>
+    </ul>
+  </li>
   <li>help - print hepl page and exits.</li>
 </ol>
