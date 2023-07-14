@@ -45,9 +45,9 @@ cp ml/headers/ml.hpp includes/ml.hpp
 make -C dtkmlc
 cp dtkmlc/dtkmlc bin/dtkmlc
 
-#project
-make -C project
-cp project/project bin/project
+#mpm
+make -C mpm
+cp mpm/mpm bin/mpm
 
 #templates
 cat templates/c.dtk > templates/c_cpp_templates_collection.dtk

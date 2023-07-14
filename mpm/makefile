@@ -1,4 +1,4 @@
-name := project
+name := mpm
 
 libs := -llog++ -lcommon++ -lml -lcommon -llog
 std := -std=c++2a

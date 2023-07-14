@@ -39,6 +39,7 @@
     <li>Added 'project add library'</li>
     <li>Added 'project add [WHAT]' for WHAT in ['binary', 'library', 'include', 'resource', 'binary_directory', 'library_directory', 'include_directory', 'resource_directory']</li>
     <li>Added new template 'c_math'</li>
+    <li>Renamed project => mpm</li>
 </ol>
 
 # Todo:

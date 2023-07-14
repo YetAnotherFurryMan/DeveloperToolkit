@@ -22,7 +22,7 @@ _dtkmlc xml test
 
 #Functions
 _pr_init(){
-    ../bin/project init -n $1 -b $2 $3
+    ../bin/mpm init -n $1 -b $2 $3
 }
 
 pr_init(){
@@ -132,8 +132,8 @@ pr_add_module(){
 }
 
 #project help
-../bin/project
-../bin/project help
+../bin/mpm
+../bin/mpm help
 
 #project init
 
