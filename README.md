@@ -60,7 +60,7 @@ A very simple tool for .dtk files "compiling". That means the program transforms
 </ol>
 
 ## 7.mpm
-Modular projects' menager - one of the "core" tools of this project. </br>
+Modular Projects' Manager - one of the "core" tools of this project. </br>
 Tasks:
 <ol>
   <li>init - initializes a new project directory-tree.</li>
