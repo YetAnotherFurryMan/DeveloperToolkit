@@ -3,6 +3,9 @@
 #include <malloc.h>
 #include <string.h>
 
+#include <common.h>
+#include <log.h>
+
 char* ml_put(struct MLAttribute* d, char* str, char* prefix, char initializer, char* equalizer, char* terminator){
     size_t _begin_leng = strlen(prefix) + 1 + strlen(d->name); //{prefix}{initializer}{name}
     char* _begin = malloc(_begin_leng + 1);
@@ -11,22 +14,40 @@ char* ml_put(struct MLAttribute* d, char* str, char* prefix, char initializer, c
     size_t _value_leng = 0;
     char* _value = 0;
     if(d->value){
-        _value_leng = strlen(equalizer) + 1 + strlen(d->value) + 1; //{equalizer}"{value}"
+        char* val = d->value;
+        
+        if(val[strlen(val) - 1] == '\n'){
+            val = ml_format_str(val);
+            val[strlen(val) - 2] = 0;
+        }
+
+        _value_leng = strlen(equalizer) + 1 + strlen(val) + 1; //{equalizer}"{val}" || {equalizer}'{val}\n
         _value = malloc(_value_leng + 1);
-        sprintf(_value, "%s\"%s\"", equalizer, d->value);
+
+        if(d->value[strlen(d->value) - 1] == '\n'){
+            sprintf(_value, "%s\'%s\n", equalizer, val);
+            free(val);
+        } else{
+            sprintf(_value, "%s\"%s\"", equalizer, val);
+        }
     }
 
     size_t _terminator_leng = strlen(terminator);
 
-    str = realloc(str, strlen(str) + _begin_leng + _value_leng + _terminator_leng);
+    if(_begin_leng){
+        str = realloc(str, strlen(str) + _begin_leng + 1);
+        strcat(str, _begin);
+    }
 
-    strcat(str, _begin);
-
-    if(_value_leng)
+    if(_value_leng){
+        str = realloc(str, strlen(str) + _value_leng + 1);
         strcat(str, _value);
+    }
     
-    if(_terminator_leng)
+    if(_terminator_leng){
+        str = realloc(str, strlen(str) + _terminator_leng + 1);
         strcat(str, terminator);
+    }
     
     free(_begin);
     free(_value);
@@ -40,14 +61,42 @@ char* ml_put(struct MLAttribute* d, char* str, char* prefix, char initializer, c
 
 char* ml_put_value(char* v, char* str, char* prefix){
     size_t leng = strlen(str);
-    leng += strlen(prefix) + 1 + strlen(v) + 2; // {prefix}"{value}"\n
+
+    char* val = v;
+    if(val[strlen(val) - 1] == '\n'){
+        val = ml_format_str(val);
+        val[strlen(val) - 2] = 0;
+    }
+
+    leng += strlen(prefix) + 1 + strlen(val) + 2; // {prefix}"{val}" || {prefix}'{val}\n
 
     str = realloc(str, leng + 1);
 
     strcat(str, prefix);
-    strcat(str, "\"");
-    strcat(str, v);
-    strcat(str, "\"\n");
+    if(v[strlen(v) - 1] == '\n'){
+        size_t pos = strlen(str);
+        str[pos] = '\'';
+        str[pos + 1] = 0;
+
+        strcat(str, val);
+
+        pos = strlen(str);
+        str[pos] = '\n';
+        str[pos + 1] = 0;
+    } else{
+        str = realloc(str, leng + 2);
+
+        size_t pos = strlen(str);
+        str[pos] = '\"';
+        str[pos + 1] = 0;
+
+        strcat(str, val);
+
+        pos = strlen(str);
+        str[pos] = '\"';
+        str[pos + 1] = '\n';
+        str[pos + 2] = 0;
+    }
 
     return str;
 }
@@ -58,7 +107,7 @@ char* ml_put_section(struct MLSection* s, char* str, char* prefix){
 
     //modifiers
     char* _modifiers = malloc(1);
-    _modifiers[0] = 0;
+    *_modifiers = 0;
 
     for(int i = 0; i < s->modifier_no; i++)
         _modifiers = ml_put_modifier(s->modifiers[i], _modifiers);
@@ -74,7 +123,7 @@ char* ml_put_section(struct MLSection* s, char* str, char* prefix){
     sprintf(_prefix, "%s\t", prefix);
 
     char* _cnt = malloc(1);
-    _cnt[0] = 0;
+    *_cnt = 0;
 
     //put definitions
     for(int i = 0; i < s->definition_no; i++)

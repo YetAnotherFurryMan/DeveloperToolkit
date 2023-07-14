@@ -48,8 +48,11 @@ hex [0-9a-fA-F]{2}
 
 <VALUE>[^\\"]+ { ml_puts_value_lex(yytext); }
 <VALUE>\\\" { ml_putc_value_lex('\"'); }
+<VALUE>\\\' { ml_putc_value_lex('\''); }
 <VALUE>\\\\ { ml_putc_value_lex('\\'); }
 <VALUE>\\n { ml_putc_value_lex('\n'); }
+<VALUE>\\r { ml_putc_value_lex('\r'); }
+<VALUE>\\t { ml_putc_value_lex('\t'); }
 <VALUE>\\(x|X){hex} {
                         int temp = 0;
                         for(int i = 2; i > 0; i--){
@@ -75,7 +78,35 @@ hex [0-9a-fA-F]{2}
 <VALUE><<EOF>> { yyerror("Lexical error: Unexpected EOF."); free(ml_value_lex); yybegin(INITIAL); }
 <VALUE>\" { ml_push_value_lex(); yybegin(INITIAL); return TK_VALUE; }
 
-<VALUE_LONG>. { ml_putc_value_lex(yytext[0]); }
+<VALUE_LONG>[^\\\n]+ { ml_puts_value_lex(yytext); }
+<VALUE_LONG>\\\" { ml_putc_value_lex('\"'); }
+<VALUE_LONG>\\\' { ml_putc_value_lex('\''); }
+<VALUE_LONG>\\\\ { ml_putc_value_lex('\\'); }
+<VALUE_LONG>\\n { ml_putc_value_lex('\n'); }
+<VALUE_LONG>\\r { ml_putc_value_lex('\r'); }
+<VALUE_LONG>\\t { ml_putc_value_lex('\t'); }
+<VALUE_LONG>\\(x|X){hex} {
+                        int temp = 0;
+                        for(int i = 2; i > 0; i--){
+                            temp  <<= 4;
+                            temp  += hextoint(toupper(yytext[yyleng - i]));
+                        }
+                        ml_putc_value_lex((char)temp);
+                    }
+<VALUE_LONG>\\(u|U){hex}{hex} {
+                             int temp = 0;
+                             for(int i = 2; i > 0; i--){
+                                 temp  <<= 4;
+                                 temp  += hextoint(toupper(yytext[yyleng - i]));
+                             }
+                             ml_putc_value_lex((char)temp);
+                             temp = 0;
+                             for(int i = 4; i > 2; i--){
+                                 temp  <<= 4;
+                                 temp  += hextoint(toupper(yytext[yyleng - i]));
+                             }
+                             ml_putc_value_lex((char)temp);
+                         }
 <VALUE_LONG><<EOF>> { yyerror("Lexical error: Unexpected EOF."); free(ml_value_lex); yybegin(INITIAL); }
 <VALUE_LONG>\n { ml_putc_value_lex('\n'); ml_push_value_lex(); yybegin(INITIAL); return TK_VALUE; }
 

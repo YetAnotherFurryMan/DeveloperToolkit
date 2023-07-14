@@ -13,7 +13,7 @@ ml/*.so
 ml/test/test
 ml/test/*.out.dtk
 
-project/project
+mpm/mpm
 
 test/bash*
 test/make*

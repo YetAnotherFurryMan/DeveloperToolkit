@@ -1,0 +1,38 @@
+<template name="c_cpp">
+    !dir: "bin"
+    !dir: "src"
+    !dir: "headers"
+    !ebin: "<$name>"
+    <file name="src/main.cpp">
+        '#include <iostream>
+        '
+        'int main(int argc, char** argv){
+        '    std::cout << "Hello World!" << std::endl;
+        '    return 0;
+        '}
+    </file>
+    <clean>
+        !dir: "bin"
+    </clean>
+    <rule in="src/<*>.c" out="bin/<*>.c.o" type="N2N" priority="0">
+        #out_prefix = "-o "
+        #lib_prefix = "-l"
+        #inc_dir_prefix = "-I "
+        #lib_dir_prefix = "-L "
+        !exe: "gcc -c <$out> <$in> <$inc_dirs>"
+    </rule>
+    <rule in="src/<*>.cpp" out="bin/<*>.cpp.o" type="N2N" priority="0">
+        #out_prefix = "-o "
+        #lib_prefix = "-l"
+        #inc_dir_prefix = "-I "
+        #lib_dir_prefix = "-L "
+        !exe: "g++ -c <$out> <$in> <$inc_dirs>"
+    </rule>
+    <rule in="bin/<*>.o" out="<$name>" type="N21" priority="0">
+        #out_prefix = "-o "
+        #lib_prefix = "-l"
+        #inc_dir_prefix = "-I "
+        #lib_dir_prefix = "-L "
+        !exe: "g++ <$out> <$in> <$lib_dirs> <$libs>"
+    </rule>
+</template>

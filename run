@@ -14,16 +14,25 @@ mkdir includes 2> /dev/null
 make -C log
 cp log/log.so lib/log.so
 cp log/liblog.a lib/liblog.a
-cp log/headers/log.hpp includes/log.hpp
+cp log/headers/log.h includes/log.h
+
+#log++
+make -C log++
+cp log++/log++.so lib/log++.so
+cp log++/liblog++.a lib/liblog++.a
+cp log++/headers/log.hpp includes/log.hpp
 
 #common
 make -C common
 cp common/common.so lib/common.so
-cp common/ccommon.so lib/ccommon.so
 cp common/libcommon.a lib/libcommon.a
-cp common/libccommon.a lib/libccommon.a
 cp common/headers/common.h includes/common.h
-cp common/headers/common.hpp includes/common.hpp
+
+#common++
+make -C common++
+cp common++/common++.so lib/common++.so
+cp common++/libcommon++.a lib/libcommon++.a
+cp common++/headers/common.hpp includes/common.hpp
 
 #ml
 make -C ml
@@ -32,9 +41,21 @@ cp ml/libml.a lib/libml.a
 cp ml/headers/ml.h includes/ml.h
 cp ml/headers/ml.hpp includes/ml.hpp
 
-#project
-make -C project
-cp project/project bin/project
+#dtkmlc
+make -C dtkmlc
+cp dtkmlc/dtkmlc bin/dtkmlc
+
+#mpm
+make -C mpm
+cp mpm/mpm bin/mpm
+
+#templates
+cat templates/c.dtk > templates/c_cpp_templates_collection.dtk
+echo >> templates/c_cpp_templates_collection.dtk
+cat templates/cpp.dtk >> templates/c_cpp_templates_collection.dtk
+echo >> templates/c_cpp_templates_collection.dtk
+cat templates/c_cpp.dtk >> templates/c_cpp_templates_collection.dtk
+echo >> templates/c_cpp_templates_collection.dtk
 
 #test
-./.scripts/test.sh
+bash ./.scripts/test.sh

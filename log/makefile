@@ -7,7 +7,7 @@ all: clean dir $(name).so lib$(name).a
 clean:
 	@echo Cleaning $(name)
 	@rm -f bin/*
-	@rm -f $(name)
+	@rm -f *.a *.so
 
 dir: bin
 
@@ -16,7 +16,7 @@ bin:
 
 $(name).so: $(bin)
 	@echo Creating $@
-	@$(CXX) -shared -o $@ $^ -std=c++2a -I jeaders -I ../includes
+	@$(LD) -shared -o $@ $^
 
 lib$(name).a: $(bin)
 	@echo Creating $@
@@ -24,4 +24,4 @@ lib$(name).a: $(bin)
 
 $(bin):bin/%.o:src/%
 	@echo Compiling $^
-	@$(CXX) -c -o $@ $^ -std=c++2a -I headers -I ../includes -fPIC
+	@$(CC) -c -o $@ $^ -I headers -I ../includes -fPIC

@@ -1,12 +1,16 @@
 #ifdef __cplusplus
-#include "common.hpp"
-#else
+namespace dtk::common{
+    extern "C"{
+#endif
 
 #ifndef _DTK_COMMON_H_
 #define _DTK_COMMON_H_
 
-
+char* common_str_copy(const char* s);
 
 #endif //_DTK_COMMON_H
 
-#endif //__cplusplus
+#ifdef __cplusplus
+    }
+}
+#endif

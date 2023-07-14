@@ -2,6 +2,8 @@
 #include "../headers/lexer.l.h"
 #include "../headers/parser.y.h"
 
+#include <log.h>
+
 struct MLRoot* ml_get_root();
 
 struct MLRoot* ml_load_file(FILE* f){

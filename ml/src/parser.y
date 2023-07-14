@@ -15,6 +15,7 @@
     void ml_add_value(struct MLSection* s, char* v);
 
     struct MLAttribute* ml_new_attribute(char* name, char* value);
+    struct MLSection* ml_new_section();
 %}
 
 %define api.prefix {ml_yy}
@@ -132,7 +133,9 @@ section_in:
         $$ = $1;
         ml_add_value($$, $2);
       }
-    | %empty { $$ = malloc(sizeof(struct MLSection)); }
+    | %empty { 
+        $$ = ml_new_section();
+    }
 ;
 
 is: '=' | ':';
@@ -231,7 +234,7 @@ void ml_add_value(struct MLSection* s, char* v){
 struct MLAttribute* ml_new_attribute(char* name, char* value){
     struct MLAttribute* a = malloc(sizeof(struct MLAttribute));
 
-    a->name = malloc(strlen(name));
+    a->name = malloc(strlen(name) + 1);
     strcpy(a->name, name);
 
     if(value){
@@ -242,4 +245,24 @@ struct MLAttribute* ml_new_attribute(char* name, char* value){
     }
 
     return a;
+}
+
+struct MLSection* ml_new_section(){
+    struct MLSection* s = malloc(sizeof(struct MLSection));
+
+    s->name = 0;
+
+    s->definition_no = 0;
+    s->attribute_no = 0;
+    s->modifier_no = 0;
+    s->section_no = 0;
+    s->value_no = 0;
+
+    s->definitions = 0;
+    s->attributes = 0;
+    s->modifiers = 0;
+    s->sections = 0;
+    s->values = 0;
+
+    return s;
 }
