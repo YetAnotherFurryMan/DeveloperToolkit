@@ -1,214 +1,674 @@
 #!/bin/bash
 
+test_count=0
+test_passed=0
+critical_faul_no=0
+critical_faul_val=0
+
+critical_faul(){
+    if [[ $1 -ne 0 ]]
+    then
+        echo Critical Faul $critical_faul_no
+        echo Return value $1
+        exit
+    fi
+
+    let "critical_faul_no += 1"
+}
+
 #Enter test
 mkdir test 2> /dev/null
 cd test
 
 #Clean
-rm -rf bash* make* *.out.*
+rm -rf ml mpm
 
 #ml
 make -C ../ml test/test
 
-#dtkmlc
-_dtkmlc(){
-    ../bin/dtkmlc -$1 $2.dtk -o $2.out.$1
-}
+#Enter ml
+mkdir ml 2> /dev/null
+cd ml
 
-cp ../ml/test/test.dtk test.dtk
-
-_dtkmlc txt test
-_dtkmlc xml test
+#Copy needed files
+cp ../../ml/test/test test
+cp ../../ml/test/test1.dtk test1.dtk
+cp ../../ml/test/test2.dtk test2.dtk
 
 #Functions
-_pr_init(){
-    ../bin/mpm init -n $1 -b $2 $3
-}
+ml_test(){
+    echo "Testing ml ($1.dtk)"
+    let "test_count += 3"
 
-pr_init(){
-    _pr_init $1 $1 ""
-    _pr_init $1_c $1 "-t c -T ../templates/c.dtk"
-    _pr_init $1_c_m $1 "-t c_math -T ../templates/c.dtk"
-    _pr_init $1_cpp $1 "-t cpp -T ../templates/cpp.dtk"
-}
+    echo -e "\n\nml_test: $1.dtk\n" >> ../test_stdout.log
+    echo -e "\n\nml_test: $1.dtk\n" >> ../test_stderr.log
 
-_run(){
-    cd $1
-    bash run
-    cd ..
-}
+    ./test $1.dtk $1.out.1.dtk $1.inheritance.1.dtk $1.deinheritance.1.dtk >> ../test_stdout.log 2>> ../test_stderr.log
+    critical_faul $?
 
-_exe(){
-    cd $1
-    ./$1
-    cd ..
-}
+    ./test $1.out.1.dtk $1.out.2.dtk $1.inheritance.2.dtk $1.deinheritance.2.dtk >> ../test_stdout.log 2>> ../test_stderr.log
+    critical_faul $?
 
-_exe2(){
-    cd $1
-    ./$1 $2
-    cd ..
-}
-
-test_count=0
-test_passed=0
-
-_test_hello_world(){
-    echo -n "Testing $1 - "
-    let "test_count += 1"
-    if [[ $2 == "Hello World!" ]]
-    then
-        echo Passed
+    echo -n "Output "
+    if cmp -s "$1.out.1.dtk" "$1.out.2.dtk"
+    then 
+        echo "- Passed"
         let "test_passed += 1"
-    else
-        echo Failed
+    else 
+        echo "- Failed"
+        echo $1.out.1.dtk != $1.out.2.dtk
+    fi
+
+    echo -n "Inheritance "
+    if cmp -s "$1.inheritance.1.dtk" "$1.inheritance.2.dtk"
+    then 
+        echo "- Passed"
+        let "test_passed += 1"
+    else 
+        echo "- Failed"
+        echo $1.inheritance.1.dtk != $1.inheritance.2.dtk
+    fi
+
+    echo -n "Deinheritance "
+    if cmp -s "$1.deinheritance.1.dtk" "$1.deinheritance.2.dtk"
+    then 
+        echo "- Passed"
+        let "test_passed += 1"
+    else 
+        echo "- Failed"
+        echo $1.deinheritance.1.dtk != $1.deinheritance.2.dtk
     fi
 }
 
-_test_math(){
-    echo -n "Testing $1 - "
+#Tests
+ml_test test1
+ml_test test2
+
+#Exit ml
+cd ..
+
+#Enter mpm
+mkdir mpm 2> /dev/null
+cd mpm
+
+#Copy needed files
+cp ../../bin/mpm mpm
+critical_faul $?
+
+#Functions
+mpm(){
+    echo -n "Return Value Test "
     let "test_count += 1"
-    excepted=`echo "scale=6; sqrt($3)" | bc`
+
+    echo -e "\n\nmpm: mpm $2\n" >> ../test_stdout.log
+    echo -e "\n\nmpm: mpm $2\n" >> ../test_stderr.log
+
+    ./mpm $2 >> ../test_stdout.log 2>> ../test_stderr.log
+    r=$?
+
+    if [[ $r -eq $1 ]]
+    then
+        echo "- Passed"
+        let "test_passed += 1"
+    else
+        echo "- Failed"
+        echo "$r != $1"
+        let "critical_faul_val += 1"
+    fi
+}
+
+pr(){
+    cd $2
+
+    echo -n "Return Value Test "
+    let "test_count += 1"
+
+    echo -e "\n\npr: mpm $3\n" >> ../../test_stdout.log
+    echo -e "\n\npr: mpm $3\n" >> ../../test_stderr.log
+
+    ../mpm $3 >> ../../test_stdout.log 2>> ../../test_stderr.log
+    r=$?
+
+    if [[ $r -eq $1 ]]
+    then
+        echo "- Passed"
+        let "test_passed += 1"
+    else
+        echo "- Failed"
+        echo "$r != $1"
+        let "critical_faul_val += 1"
+    fi
+
+    cd ..
+}
+
+pr_run(){
+    cd $1
+
+    echo -e "\n\npr_run: ./run\n" >> ../../test_stdout.log
+    echo -e "\n\npr_run: ./run\n" >> ../../test_stderr.log
+
+    bash run >> ../../test_stdout.log 2>> ../../test_stderr.log
+    if [[ $? -ne 0 ]]
+    then
+        let "critical_faul_val += 1"
+    fi
+
+    cd ..
+}
+
+run_test(){
+    echo -n "Run Test "
+    let "test_count += 1"
+
+    echo -e "\n\nrun_test: ./$2\n" >> ../test_stdout.log
+    echo -e "\n\nrun_test: ./$2\n" >> ../test_stderr.log
+
+    ./$2/$2 $3 >> ../test_stdout.log 2>> ../test_stderr.log
+    r=$?
+
+    if [[ $r -eq $1 ]]
+    then
+        echo "- Passed"
+        let "test_passed += 1"
+    else
+        echo "- Failed"
+        echo "$r != $1"
+    fi
+}
+
+run_mod_test(){
+    echo -n "Run Mod Test "
+    let "test_count += 1"
+
+    echo -e "\n\nrun_mod_test: ./$2/bin/$3\n" >> ../test_stdout.log
+    echo -e "\n\nrun_mod_test: ./$2/bin/$3\n" >> ../test_stderr.log
+
+    ./$2/bin/$3 $4 >> ../test_stdout.log 2>> ../test_stderr.log
+    r=$?
+
+    if [[ $r -eq $1 ]]
+    then
+        echo "- Passed"
+        let "test_passed += 1"
+    else
+        echo "- Failed"
+        echo "$r != $1"
+    fi
+}
+
+exe(){
+    cd $1
+    ./$2 $3
+    cd ..
+}
+
+hello_world_test(){
+    echo -n "Hello World Test "
+    let "test_count += 1"
+
+    if [[ $@ == "Hello World!" ]]
+    then
+        echo "- Passed"
+        let "test_passed += 1"
+    else
+        echo "- Failed"
+        echo "\"$@\" != \"Hello World!\""
+    fi
+}
+
+math_test(){
+    echo -n "Math Test "
+    let "test_count += 1"
+    
+    excepted=`echo "scale=6; sqrt($1)" | bc`
+
     if [[ $2 == $excepted ]]
     then
         echo Passed
         let "test_passed += 1"
     else
         echo Failed
+        echo "$2 != $excepted"
     fi
 }
 
-test(){
-    echo Running { $1* }
-    _run $1
-    _run $1_c
-    _run $1_c_m
-    _run $1_cpp
-    _test_hello_world "C" "$(_exe $1_c)"
-    _test_hello_world "C++" "$(_exe $1_cpp)"
-    _test_math "C Math" "$(_exe $1_c_m)" 64
-    _test_math "C Math (4)" "$(_exe2 $1_c_m 4)" 4
-    _test_math "C Math (256)" "$(_exe2 $1_c_m 256)" 256
-}
+#Tests
+mpm 0 ""
+critical_faul $?
 
-_pr(){
-    cd $1
-    ../../bin/project $2 $3
-    ../../bin/project info
-    cd ..
-}
+mpm 0 "help"
+critical_faul $?
 
-_pr_do(){
-    echo project { $1* } $2 $3
-    for x in $1*
-    do 
-        _pr $x $2 $3
-    done
-}
+#mpm invalid [TASK] parameter
+mpm 130 "invalid"
 
-pr_enable(){
-    _pr_do $1 enable $2
-}
+#mpm init
+mpm 0 "init -n bash -b bash"
+mpm 0 "init -n bash_c -b bash -t c -T ../../templates/c.dtk"
+mpm 0 "init -n bash_c_math -b bash -t c_math -T ../../templates/c.dtk"
+mpm 0 "init -n bash_cpp -b bash -t cpp -T ../../templates/cpp.dtk"
 
-pr_disable(){
-    _pr_do $1 disable $2
-}
+mpm 0 "init -n make -b make"
+mpm 0 "init -n make_c -b make -t c -T ../../templates/c.dtk"
+mpm 0 "init -n make_c_math -b make -t c_math -T ../../templates/c.dtk"
+mpm 0 "init -n make_cpp -b make -t cpp -T ../../templates/cpp.dtk"
 
-pr_add(){
-    echo project { $1 } add $2 $3
-    _pr $1 add "$2 $3"
-}
+critical_faul $critical_faul_val
 
-pr_add_template(){
-    pr_add $1 template $2
-}
+#mpm Excepted argument after -n
+mpm 83 "init -n"
 
-pr_add_filtered_templates(){
-    pr_add $1 template "$2 $3"
-}
+#mpm Name already has been set
+mpm 83 "init -n name1 -n name2"
 
-pr_add_module(){
-    pr_add $1 module "-n module_$2 -t $2"
-}
+#mpm Excepted argument after -b
+mpm 83 "init -b"
 
-#project help
-../bin/mpm
-../bin/mpm help
+#mpm Project build system already has been set
+mpm 83 "init -b bash -b bash"
+mpm 83 "init -b make -b bash"
 
-#project init
+#mpm Unsupported build system
+mpm 83 "init -b unsupported"
 
-pr_init make
-pr_init bash
+#mpm Excepted argument after -t
+mpm 83 "init -t"
 
-#Test #1
+#mpm Project template already has been set
+mpm 83 "init -t a -t b"
 
-test make
-test bash
+#mpm Excepted argument after -T
+mpm 83 "init -T"
 
-#project enable log
+#mpm Unknown argument
+mpm 158 "init -abc"
 
-pr_enable make log
-pr_enable bash log
+#mpm Name not given
+mpm 83 "init"
 
-#Test #2
+#mpm Template not found
+mpm 83 "init -n name -t not_found"
+mpm 83 "init -n name -t not_found -T ../../templates/c.dtk"
 
-test make
-test bash
+#Clear critical_faul_val
+let "critical_faul_val = 0"
 
-#project enable test
+#mpm info
+pr 0 "bash" "info"
+pr 0 "bash_c" "info"
+pr 0 "bash_c_math" "info"
+pr 0 "bash_cpp" "info"
 
-pr_enable make test
-pr_enable bash test
+pr 0 "make" "info"
+pr 0 "make_c" "info"
+pr 0 "make_c_math" "info"
+pr 0 "make_cpp" "info"
 
-#Test #3
+critical_faul $critical_faul_val
 
-test make
-test bash
+#mpm pr_run
+pr_run "bash"
+pr_run "bash_c"
+pr_run "bash_c_math"
+pr_run "bash_cpp"
 
-#project disable test
+pr_run "make"
+pr_run "make_c"
+pr_run "make_c_math"
+pr_run "make_cpp"
 
-pr_disable make test
-pr_disable bash test
+critical_faul $critical_faul_val
 
-#Test #4
+#mpm run_test
+run_test 0 "bash_c" ""
+run_test 0 "bash_c_math" ""
+run_test 0 "bash_cpp" ""
 
-test make
-test bash
+run_test 0 "make_c" ""
+run_test 0 "make_c_math" ""
+run_test 0 "make_cpp" ""
 
-#project disable log
+#mpm hello world test
+hello_world_test $(exe "bash_c" "bash_c" "")
+hello_world_test $(exe "bash_cpp" "bash_cpp" "")
 
-pr_disable make log
-pr_disable bash log
+hello_world_test $(exe "make_c" "make_c" "")
+hello_world_test $(exe "make_cpp" "make_cpp" "")
 
-#Test #4
+#mpm math test
+math_test 4 $(exe "bash_c_math" "bash_c_math" "4")
+math_test 64 $(exe "bash_c_math" "bash_c_math" "")
+math_test 256 $(exe "bash_c_math" "bash_c_math" "256")
 
-test make
-test bash
+math_test 4 $(exe "make_c_math" "make_c_math" "4")
+math_test 64 $(exe "make_c_math" "make_c_math" "")
+math_test 256 $(exe "make_c_math" "make_c_math" "256")
 
-#project add template
+#Clear critical_faul_val
+let "critical_faul_val = 0"
 
-pr_add_template make ../../templates/c.dtk
-pr_add_template bash ../../templates/c.dtk
+#mpm enable log
+pr 0 "bash" "enable log"
+pr 0 "bash_c" "enable log"
+pr 0 "bash_c_math" "enable log"
+pr 0 "bash_cpp" "enable log"
 
-pr_add_filtered_templates make ../../templates/c_cpp_templates_collection.dtk "-n cpp"
-pr_add_filtered_templates bash ../../templates/c_cpp_templates_collection.dtk "-n cpp"
+pr 0 "make" "enable log"
+pr 0 "make_c" "enable log"
+pr 0 "make_c_math" "enable log"
+pr 0 "make_cpp" "enable log"
 
-#project module
+critical_faul $critical_faul_val
 
-pr_add_module make c
-pr_add_module bash c
+#mpm pr_run
+pr_run "bash"
+pr_run "bash_c"
+pr_run "bash_c_math"
+pr_run "bash_cpp"
 
-pr_add_module make cpp
-pr_add_module bash cpp
+pr_run "make"
+pr_run "make_c"
+pr_run "make_c_math"
+pr_run "make_cpp"
 
-#Test #5
+critical_faul $critical_faul_val
 
-test make
-test bash
+#mpm run_test
+run_test 0 "bash_c" ""
+run_test 0 "bash_c_math" ""
+run_test 0 "bash_cpp" ""
+
+run_test 0 "make_c" ""
+run_test 0 "make_c_math" ""
+run_test 0 "make_cpp" ""
+
+#mpm hello world test
+hello_world_test $(exe "bash_c" "bash_c" "")
+hello_world_test $(exe "bash_cpp" "bash_cpp" "")
+
+hello_world_test $(exe "make_c" "make_c" "")
+hello_world_test $(exe "make_cpp" "make_cpp" "")
+
+#mpm math test
+math_test 4 $(exe "bash_c_math" "bash_c_math" "4")
+math_test 64 $(exe "bash_c_math" "bash_c_math" "")
+math_test 256 $(exe "bash_c_math" "bash_c_math" "256")
+
+math_test 4 $(exe "make_c_math" "make_c_math" "4")
+math_test 64 $(exe "make_c_math" "make_c_math" "")
+math_test 256 $(exe "make_c_math" "make_c_math" "256")
+
+#mpm Failed to open project file
+mpm 111 "enable"
+
+#mpm No arguments
+pr 83 "bash" "enable"
+
+#mpm Invalid functionality name
+pr 130 "bash" "enable invalid"
+
+#Clear critical_faul_val
+let "critical_faul_val = 0"
+
+#mpm enable test
+pr 0 "bash" "enable test"
+pr 0 "bash_c" "enable test"
+pr 0 "bash_c_math" "enable test"
+pr 0 "bash_cpp" "enable test"
+
+pr 0 "make" "enable test"
+pr 0 "make_c" "enable test"
+pr 0 "make_c_math" "enable test"
+pr 0 "make_cpp" "enable test"
+
+critical_faul $critical_faul_val
+
+#mpm pr_run
+pr_run "bash"
+pr_run "bash_c"
+pr_run "bash_c_math"
+pr_run "bash_cpp"
+
+pr_run "make"
+pr_run "make_c"
+pr_run "make_c_math"
+pr_run "make_cpp"
+
+#Not supported yet
+#critical_faul $critical_faul_val
+
+#mpm run_test
+run_test 0 "bash_c" ""
+run_test 0 "bash_c_math" ""
+run_test 0 "bash_cpp" ""
+
+run_test 0 "make_c" ""
+run_test 0 "make_c_math" ""
+run_test 0 "make_cpp" ""
+
+#mpm hello world test
+hello_world_test $(exe "bash_c" "bash_c" "")
+hello_world_test $(exe "bash_cpp" "bash_cpp" "")
+
+hello_world_test $(exe "make_c" "make_c" "")
+hello_world_test $(exe "make_cpp" "make_cpp" "")
+
+#mpm math test
+math_test 4 $(exe "bash_c_math" "bash_c_math" "4")
+math_test 64 $(exe "bash_c_math" "bash_c_math" "")
+math_test 256 $(exe "bash_c_math" "bash_c_math" "256")
+
+math_test 4 $(exe "make_c_math" "make_c_math" "4")
+math_test 64 $(exe "make_c_math" "make_c_math" "")
+math_test 256 $(exe "make_c_math" "make_c_math" "256")
+
+#Clear critical_faul_val
+let "critical_faul_val = 0"
+
+#mpm disable log
+pr 0 "bash" "disable log"
+pr 0 "bash_c" "disable log"
+pr 0 "bash_c_math" "disable log"
+pr 0 "bash_cpp" "disable log"
+
+pr 0 "make" "disable log"
+pr 0 "make_c" "disable log"
+pr 0 "make_c_math" "disable log"
+pr 0 "make_cpp" "disable log"
+
+critical_faul $critical_faul_val
+
+#mpm pr_run
+pr_run "bash"
+pr_run "bash_c"
+pr_run "bash_c_math"
+pr_run "bash_cpp"
+
+pr_run "make"
+pr_run "make_c"
+pr_run "make_c_math"
+pr_run "make_cpp"
+
+#Not supported yet
+#critical_faul $critical_faul_val
+
+#mpm run_test
+run_test 0 "bash_c" ""
+run_test 0 "bash_c_math" ""
+run_test 0 "bash_cpp" ""
+
+run_test 0 "make_c" ""
+run_test 0 "make_c_math" ""
+run_test 0 "make_cpp" ""
+
+#mpm hello world test
+hello_world_test $(exe "bash_c" "bash_c" "")
+hello_world_test $(exe "bash_cpp" "bash_cpp" "")
+
+hello_world_test $(exe "make_c" "make_c" "")
+hello_world_test $(exe "make_cpp" "make_cpp" "")
+
+#mpm math test
+math_test 4 $(exe "bash_c_math" "bash_c_math" "4")
+math_test 64 $(exe "bash_c_math" "bash_c_math" "")
+math_test 256 $(exe "bash_c_math" "bash_c_math" "256")
+
+math_test 4 $(exe "make_c_math" "make_c_math" "4")
+math_test 64 $(exe "make_c_math" "make_c_math" "")
+math_test 256 $(exe "make_c_math" "make_c_math" "256")
+
+#mpm Failed to open project file
+mpm 111 "disable"
+
+#mpm No arguments
+pr 83 "bash" "disable"
+
+#mpm Invalid functionality name
+pr 130 "bash" "disable invalid"
+
+#Clear critical_faul_val
+let "critical_faul_val = 0"
+
+#mpm disable test
+pr 0 "bash" "disable test"
+pr 0 "bash_c" "disable test"
+pr 0 "bash_c_math" "disable test"
+pr 0 "bash_cpp" "disable test"
+
+pr 0 "make" "disable test"
+pr 0 "make_c" "disable test"
+pr 0 "make_c_math" "disable test"
+pr 0 "make_cpp" "disable test"
+
+critical_faul $critical_faul_val
+
+#mpm pr_run
+pr_run "bash"
+pr_run "bash_c"
+pr_run "bash_c_math"
+pr_run "bash_cpp"
+
+pr_run "make"
+pr_run "make_c"
+pr_run "make_c_math"
+pr_run "make_cpp"
+
+critical_faul $critical_faul_val
+
+#mpm run_test
+run_test 0 "bash_c" ""
+run_test 0 "bash_c_math" ""
+run_test 0 "bash_cpp" ""
+
+run_test 0 "make_c" ""
+run_test 0 "make_c_math" ""
+run_test 0 "make_cpp" ""
+
+#mpm hello world test
+hello_world_test $(exe "bash_c" "bash_c" "")
+hello_world_test $(exe "bash_cpp" "bash_cpp" "")
+
+hello_world_test $(exe "make_c" "make_c" "")
+hello_world_test $(exe "make_cpp" "make_cpp" "")
+
+#mpm math test
+math_test 4 $(exe "bash_c_math" "bash_c_math" "4")
+math_test 64 $(exe "bash_c_math" "bash_c_math" "")
+math_test 256 $(exe "bash_c_math" "bash_c_math" "256")
+
+math_test 4 $(exe "make_c_math" "make_c_math" "4")
+math_test 64 $(exe "make_c_math" "make_c_math" "")
+math_test 256 $(exe "make_c_math" "make_c_math" "256")
+
+#Clear critical_faul_val
+let "critical_faul_val = 0"
+
+#mpm add template
+pr 0 "bash" "add template ../../../templates/c.dtk"
+pr 0 "bash" "add template ../../../templates/c_cpp_templates_collection.dtk -n cpp"
+
+pr 0 "make" "add template ../../../templates/c.dtk"
+pr 0 "make" "add template ../../../templates/c_cpp_templates_collection.dtk -n cpp"
+
+critical_faul $critical_faul_val
+
+#mpm pr_run
+pr_run "bash"
+pr_run "make"
+
+critical_faul $critical_faul_val
+
+#mpm Excepted argument after -n
+pr 83 "bash" "add template -n"
+
+#mpm Excepted argument after 'add'
+mpm 130 "add"
+
+#Clear critical_faul_val
+let "critical_faul_val = 0"
+
+#mpm add module
+pr 0 "bash" "add module -n module_c -t c"
+pr 0 "bash" "add module -n module_cpp -t cpp"
+
+pr 0 "make" "add module -n module_c -t c"
+pr 0 "make" "add module -n module_cpp -t cpp"
+
+critical_faul $critical_faul_val
+
+#mpm pr_run
+pr_run "bash"
+pr_run "make"
+
+critical_faul $critical_faul_val
+
+#mpm run test
+run_mod_test 0 "bash" "module_c" ""
+run_mod_test 0 "bash" "module_cpp" ""
+
+run_mod_test 0 "make" "module_c" ""
+run_mod_test 0 "make" "module_cpp" ""
+
+#mpm hello world test
+hello_world_test $(exe "bash" "bin/module_c" "")
+hello_world_test $(exe "bash" "bin/module_cpp" "")
+
+hello_world_test $(exe "make" "bin/module_c" "")
+hello_world_test $(exe "make" "bin/module_cpp" "")
+
+#mpm Project is non-modular
+pr 130 "bash_c" "add module"
+
+#mpm Excepted argument after -t
+pr 83 "bash" "add module -t"
+
+#mpm Template already setted
+pr 83 "bash" "add module -t a -t b"
+
+#mpm Excepted argument after -n
+pr 83 "bash" "add module -n"
+
+#mpm Name already setted
+pr 83 "bash" "add module -n name1 -n name2"
+
+#mpm Name has not been specified
+pr 83 "bash" "add module"
+
+#mpm Template has not been specified
+pr 83 "bash" "add module -n name"
+
+#mpm Module named '' already exists
+pr 83 "bash" "add module -n module_c -t c"
+
+#Clear critical_faul_val
+let "critical_faul_val = 0"
+
+#Exit mpm
+cd ..
 
 #Summary
-
 echo Summary $test_passed / $test_count
 
-#Leave test
+#Exit test
 cd ..
