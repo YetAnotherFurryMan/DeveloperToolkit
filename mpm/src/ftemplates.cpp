@@ -207,7 +207,7 @@ namespace ftemplates{
 
             for(auto& name: names){
                 if(name == tmpl.name){
-                    dtk::log::error("Template \"" + name + "\" already added.");
+                    dtk::log::warning("Template \"" + name + "\" already added.");
                     found = true;
                     break;
                 }

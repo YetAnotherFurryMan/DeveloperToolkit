@@ -19,5 +19,10 @@ namespace dtk::log{
         assert(errno != 0, strerror(errno), errno);
     }
 
+    #else
+
+    inline void assert(bool b, const std::string& msg, int code = 0){}
+    inline void assert_errno(){}
+
     #endif
 }

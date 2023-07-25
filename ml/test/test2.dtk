@@ -1,0 +1,17 @@
+#def_no_val1
+#def1: "definition1"
+#def2: 'definition2
+#def3="definition3"
+#def4='definition4
+<section1>
+    #def_no_val2
+    #def5: "definition5"
+    #def6: 'definition6 
+    #def1: "newdefinition1"
+    <section2>
+        #def_no_val3
+        #def7="definition7"
+        #def2="newdefinition2"
+        #def8='definition8
+    </section2>
+</section1>

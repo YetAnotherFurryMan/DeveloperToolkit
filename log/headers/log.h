@@ -17,6 +17,11 @@ void log_info(const char* msg);
 void log_assert(char b, const char* msg, int code);
 void log_assert_errno();
 
+#else
+
+#define log_assert(b, msg, code)
+#define log_assert_errno()
+
 #endif
 
 #endif

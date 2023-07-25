@@ -14,14 +14,14 @@
     <clean>
         !dir: "bin"
     </clean>
-    <rule in="src/<*>.c" out="bin/<*>.c.o"  type="N2N" priority="0">
+    <rule in="src/<*>.c" out="bin/<*>.c.o"  type="N2N" priority="0" name="Compiling">
         #out_prefix = "-o "
         #lib_prefix = "-l"
         #inc_dir_prefix = "-I "
         #lib_dir_prefix = "-L "
         !exe: "gcc -c <$out> <$in> <$inc_dirs>"
     </rule>
-    <rule in="bin/<*>.o" out="<$name>" type="N21" priority="0">
+    <rule in="bin/<*>.o" out="<$name>" type="N21" priority="0" title="Linking <$out>">
         #out_prefix = "-o "
         #lib_prefix = "-l"
         #inc_dir_prefix = "-I "

@@ -93,12 +93,13 @@ int main(int argc, char** argv){
     argc--; argv++;
 
     if(argc == 0){
-        std::cout <<help << std::endl;
+        std::cout << help << std::endl;
         return 0;
     }
 
     //Choose task
-    char* task = argv[0]; argc--; argv++; //Get a task name and pop the argument
+    char* task = argv[0]; 
+    argc--; argv++; //Get a task name and pop the argument
     if(STRCMP_EQ(task, "init")){
         std::string name;
         std::string templ;
@@ -115,30 +116,30 @@ int main(int argc, char** argv){
                     dtk::log::fatal_error("Excepted argument after '" + std::string(argv[i - 1]) + "'.", 83); //ELOAD
                 
                 if(!name.empty())
-                    dtk::log::fatal_error("Name already has been set.");
+                    dtk::log::fatal_error("Name already has been set.", 83); //ELOAD
                 
                 name = argv[i];
             } else if(STRCMP_EQ(argv[i], "-b") || STRCMP_EQ(argv[i], "--build")){ //Load a build system, return an error if was already seted or there is a syntax error
-                if(build_set)
-                    dtk::log::fatal_error("Project build system already has been set.");
-                
                 if(++i >= argc)
                     dtk::log::fatal_error("Excepted argument after '" + std::string(argv[i - 1]) + "'.", 83); //ELOAD
+
+                if(build_set)
+                    dtk::log::fatal_error("Project build system already has been set.", 83); //ELOAD
                 
                 if(STRCMP_EQ(argv[i], "make") || STRCMP_EQ(argv[i], "makefile")) //Set to MAKE
                     build = pr::PROJECT_BUILD_MAKE;
                 else if(STRCMP_EQ(argv[i], "bash")) //Set to BASH
                     build = pr::PROJECT_BUILD_BASH;
                 else
-                    dtk::log::fatal_error("Unsuported build system.");
+                    dtk::log::fatal_error("Unsupported build system.", 83); //ELOAD
                 
                 build_set = true;
             } else if(STRCMP_EQ(argv[i], "-t") || STRCMP_EQ(argv[i], "--template")){ //Load a template name, return an error if was already seted or there is a syntax error, set project to fast
-                if(!templ.empty())
-                    dtk::log::fatal_error("Project template already has been set.");
-                
                 if(++i >= argc)
                     dtk::log::fatal_error("Excepted argument after '" + std::string(argv[i - 1]) + "'.", 83); //ELOAD
+
+                if(!templ.empty())
+                    dtk::log::fatal_error("Project template already has been set.", 83); //ELOAD
                 
                 templ = argv[i];
                 type = pr::PROJECT_TYPE_SOLUTION;
@@ -151,6 +152,10 @@ int main(int argc, char** argv){
                 dtk::log::fatal_error(std::string("Unknown argument \"") + argv[i] + "\"", 158); //EMVSPARM
             }
         }
+
+        //Validate
+        if(name.empty())
+            dtk::log::fatal_error("Name not given.", 83); //ELOAD
 
         //Load templates
         std::vector<fd::ProjectTemplate> templates = fd::ProjectTemplate::load("templates/default.txt");
@@ -173,10 +178,6 @@ int main(int argc, char** argv){
         }
 
         //Create the project's files and scripts
-        ft::create_project(name, type, build, PROJECT_FILE, TEMPLATES_FILE, MODULES_FILE);
-
-        ft::update_templates_file(name + "/" + TEMPLATES_FILE, templates);
-
         if(type == pr::PROJECT_TYPE_SOLUTION){ //Use template if project is fast
             if(templates.empty())
                 dtk::log::fatal_error("Template not found \"" + templ + "\".", 83); //ELOAD
@@ -197,7 +198,12 @@ int main(int argc, char** argv){
                 dtk::log::fatal_error("Template not found \"" + templ + "\".", 83); //ELOAD
 
             //Build files
+            ft::create_project(name, type, build, PROJECT_FILE, TEMPLATES_FILE, MODULES_FILE);
+            ft::update_templates_file(name + "/" + TEMPLATES_FILE, templates);
             ft::build_template(used_templ.compile(name, build, true));
+        } else{
+            ft::create_project(name, type, build, PROJECT_FILE, TEMPLATES_FILE, MODULES_FILE);
+            ft::update_templates_file(name + "/" + TEMPLATES_FILE, templates);
         }
     } else if(STRCMP_EQ(task, "info")){
         //Load project data, validate and output them
@@ -340,7 +346,7 @@ int main(int argc, char** argv){
     } else if(STRCMP_EQ(task, "add")){
         //Get [WHAT] and pop it
         if(argc <= 0)
-            dtk::log::fatal_error("Excepted the argument after 'add'.", 130); //ENOEXEC
+            dtk::log::fatal_error("Excepted argument after 'add'.", 130); //ENOEXEC
         
         char* what = argv[0];
         argv++;argc--;
@@ -374,17 +380,18 @@ int main(int argc, char** argv){
             if(!names.empty()){
                 std::vector<fd::ProjectTemplate> tmpls;
 
-                for(auto& t: templates){
+                for(auto& name: names){
                     bool found = false;
-                    for(auto& name: names){
+                    for(auto& t: templates){
                         if(t.name == name){
+                            tmpls.push_back(t);
                             found = true;
                             break;
                         }
                     }
 
-                    if(found)
-                        tmpls.push_back(t);
+                    if(!found)
+                        dtk::log::warning("Template \'" + name + "\' not found.");
                 }
 
                 templates = tmpls;
@@ -393,9 +400,6 @@ int main(int argc, char** argv){
             //Update templates' file
             ft::update_templates_file(TEMPLATES_FILE, templates);
         } else if(STRCMP_EQ(what, "module")){
-            //Load project
-            fd::ProjectFile project(PROJECT_FILE);
-
             //Error if project is non-modular
             if(project.type != pr::PROJECT_TYPE_PROJECT)
                 dtk::log::fatal_error("Project is non-modular.", 130); //ENOEXEC
@@ -412,20 +416,20 @@ int main(int argc, char** argv){
             //Load args
             for(int i = 0; i < argc; i++){
                 if(STRCMP_EQ(argv[i], "-t") || STRCMP_EQ(argv[i], "--template")){ //Set template, return error if already setted
-                    if(tmpl_set)
-                        dtk::log::fatal_error("Template already setted.", 83); //ELOAD
-
                     if(++i >= argc)
                         dtk::log::fatal_error("Excepted argument after '" + std::string(argv[i - 1]) + "'.", 83); //ELOAD
+
+                    if(tmpl_set)
+                        dtk::log::fatal_error("Template already setted.", 83); //ELOAD
 
                     tmpl = argv[i];
                     tmpl_set = true;
                 } else if(STRCMP_EQ(argv[i], "-n") || STRCMP_EQ(argv[i], "--name")){ //Set name
-                    if(name_set)
-                        dtk::log::fatal_error("Name already setted.", 83); //ELOAD
-
                     if(++i >= argc)
                         dtk::log::fatal_error("Excepted argument after '" + std::string(argv[i -1]) + "'.", 83); //ELOAD
+                        
+                    if(name_set)
+                        dtk::log::fatal_error("Name already setted.", 83); //ELOAD
 
                     name = argv[i];
                     name_set = true;
@@ -465,13 +469,13 @@ int main(int argc, char** argv){
             if(!found)
                 dtk::log::fatal_error("Template not found \"" + tmpl + "\".", 83); //ELOAD
 
-            //Build module
-            ft::build_template(used_templ.compile(name, project.build));
-            ft::update_make_script(".scripts/make.sh", modules, project.build);
-
             //Add module to project
             modules.modules.push_back(used_templ.get_module(name, project.build));
             modules.update();
+
+            //Build module
+            ft::build_template(used_templ.compile(name, project.build));
+            ft::update_make_script(".scripts/make.sh", modules, project.build);
         } else IF_IMPORT("bin", "binary", BIN)
         else IF_IMPORT("lib", "library", LIB)
         else IF_IMPORT("inc", "include", INC)

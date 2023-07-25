@@ -43,6 +43,7 @@ namespace fdata{
 
     struct ProjectTemplateRule{
         std::string name;
+        std::string title;
         project::rule_type type = project::PROJECT_RULE_N2N;
         int priority = 0;
         

@@ -1,0 +1,181 @@
+#define DTK_ML_STR_BUILDER
+#include "../headers/ml.h"
+
+#include <malloc.h>
+#include <string.h>
+
+#include <common.h>
+#include <log.h>
+
+char* ml_put(MLAttribute* d, char* str, const char* prefix, const char initializer, const char* equalizer, const char* terminator){
+    size_t _begin_leng = strlen(prefix) + 1 + strlen(d->name); //{prefix}{initializer}{name}
+    char* _begin = malloc(_begin_leng + 1);
+    sprintf(_begin, "%s%c%s", prefix, initializer, d->name);
+
+    size_t _value_leng = 0;
+    char* _value = 0;
+    if(d->value){
+        char* val = d->value;
+        char is_formatted = val[strlen(val) - 1] == '\n';
+        
+        if(is_formatted){
+            val = ml_format_str(val);
+            val[strlen(val) - 2] = 0;
+        }
+
+        _value_leng = strlen(equalizer) + 1 + strlen(val) + 1; //{equalizer}"{val}" || {equalizer}'{val}\n
+        _value = malloc(_value_leng + 1);
+
+        if(is_formatted){
+            sprintf(_value, "%s\'%s\n", equalizer, val);
+            free(val);
+        } else{
+            sprintf(_value, "%s\"%s\"", equalizer, val);
+        }
+    }
+
+    size_t _terminator_leng = strlen(terminator);
+
+    if(_begin_leng){
+        str = realloc(str, strlen(str) + _begin_leng + 1);
+        strcat(str, _begin);
+    }
+
+    if(_value_leng){
+        str = realloc(str, strlen(str) + _value_leng + 1);
+        strcat(str, _value);
+    }
+    
+    if(_terminator_leng){
+        if(!(strcmp(terminator, "\n") == 0 && _value_leng && _value[_value_leng - 1] == '\n')){
+            str = realloc(str, strlen(str) + _terminator_leng + 1);
+            strcat(str, terminator);
+        }
+    }
+    
+    free(_begin);
+    free(_value);
+
+    return str;
+}
+
+char* ml_put_value(const char* v, char* str, const char* prefix){
+    size_t leng = strlen(str);
+
+    char* val = v;
+    if(val[strlen(val) - 1] == '\n'){
+        val = ml_format_str(val);
+        val[strlen(val) - 2] = 0;
+    }
+
+    leng += strlen(prefix) + 1 + strlen(val) + 2; // {prefix}"{val}" || {prefix}'{val}\n
+
+    str = realloc(str, leng + 1);
+
+    strcat(str, prefix);
+    if(v[strlen(v) - 1] == '\n'){
+        size_t pos = strlen(str);
+        str[pos] = '\'';
+        str[pos + 1] = 0;
+
+        strcat(str, val);
+
+        pos = strlen(str);
+        str[pos] = '\n';
+        str[pos + 1] = 0;
+    } else{
+        str = realloc(str, leng + 2);
+
+        size_t pos = strlen(str);
+        str[pos] = '\"';
+        str[pos + 1] = 0;
+
+        strcat(str, val);
+
+        pos = strlen(str);
+        str[pos] = '\"';
+        str[pos + 1] = '\n';
+        str[pos + 2] = 0;
+    }
+
+    return str;
+}
+
+char* ml_put_section(struct MLSection* s, char* str, const char* prefix){
+    size_t _prefix_leng = strlen(prefix);
+    size_t _name_leng = strlen(s->name);
+
+    //modifiers
+    char* _modifiers = malloc(1);
+    *_modifiers = 0;
+
+    for(int i = 0; i < s->modifiers.no; i++)
+        _modifiers = ml_put_modifier(s->modifiers.array[i], _modifiers);
+    
+    //section begin
+    char* _begin = malloc(_prefix_leng + 1 + _name_leng + strlen(_modifiers) + 3); //{prefix}<{name}{_modifiers}>\n\0
+    sprintf(_begin, "%s<%s%s>\n", prefix, s->name, _modifiers);
+
+    free(_modifiers);
+
+    //new prefix
+    char* _prefix = malloc(_prefix_leng + 2);
+    sprintf(_prefix, "%s\t", prefix);
+
+    char* _cnt = malloc(1);
+    *_cnt = 0;
+
+    //put definitions
+    for(int i = 0; i < s->definitions.no; i++)
+        _cnt = ml_put_definition(s->definitions.array[i], _cnt, _prefix);
+
+    //put attributes
+    for(int i = 0; i < s->attributes.no; i++)
+        _cnt = ml_put_attribute(s->attributes.array[i], _cnt, _prefix);
+    
+    //put sections
+    for(int i = 0; i < s->sections.no; i++)
+        _cnt = ml_put_section(s->sections.array[i], _cnt, _prefix);
+    
+    //put values
+    for(int i = 0; i < s->values.no; i++)
+        _cnt = ml_put_value(s->values.array[i], _cnt, _prefix);
+
+    free(_prefix);
+
+    //section end
+    size_t _end_leng = _prefix_leng + 2 + _name_leng + 2; //{prefix}</{name}>\n
+    char* _end = malloc(_end_leng + 1);
+    sprintf(_end, "%s</%s>\n", prefix, s->name);
+    
+    str = realloc(str, strlen(str) + strlen(_begin) + strlen(_cnt) + _end_leng + 1); //{str}{_begin}{_cnt}{_end}\0
+    strcat(str, _begin);
+    strcat(str, _cnt);
+    strcat(str, _end);
+
+    free(_begin);
+    free(_cnt);
+    free(_end);
+
+    return str;
+}
+
+char* ml_root_to_str(struct MLSection* r){
+    char* str = malloc(1);
+    strcpy(str, "");
+
+    //put definitions
+    for(int i = 0; i < r->definitions.no; i++)
+        str = ml_put_definition(r->definitions.array[i], str, "");
+    
+    //put attributes
+    for(int i = 0; i < r->attributes.no; i++)
+        str = ml_put_attribute(r->attributes.array[i], str, "");
+    
+
+    //put sections
+    for(int i = 0; i < r->sections.no; i++)
+        str = ml_put_section(r->sections.array[i], str, "");
+
+    return str;
+}

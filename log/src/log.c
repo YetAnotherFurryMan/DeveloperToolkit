@@ -1,3 +1,4 @@
+#define DTK_LOG_ENABLE_ASSERTION
 #include "../headers/log.h"
 
 #include <stdlib.h>

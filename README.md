@@ -52,14 +52,7 @@ This is used by the <b>mpm</b> module for template-files, module-files and confi
   <li>dtk::ml::ml_free_root(struct MLRoot* r) <br> frees memory</li>
 </ol>
 
-## 6.dtkmlc
-A very simple tool for .dtk files "compiling". That means the program transforms data from the <b>ml</b> to another format.
-<ol>
-  <li>TXT</li>
-  <li>XML</li>
-</ol>
-
-## 7.mpm
+## 6.mpm
 Modular Projects' Manager - one of the "core" tools of this project. </br>
 Tasks:
 <ol>

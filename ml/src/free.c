@@ -1,8 +1,12 @@
+#define DTK_ML_ELEMENT_FREE
 #include "../headers/ml.h"
 
 #include <malloc.h>
 
-void ml_free_attribute(struct MLAttribute* a){
+void ml_free_attribute(MLAttribute* a){
+    if(!a)
+        return;
+    
     //free name
     if(a->name)
         free(a->name);
@@ -14,63 +18,68 @@ void ml_free_attribute(struct MLAttribute* a){
     free(a);
 }
 
-void ml_free_section(struct MLSection* s){
+void ml_free_section(MLSection* s){
+    if(!s)
+        return;
+
     //free definitions
-    for(int i = 0; i < s->definition_no; i++)
-        ml_free_attribute(s->definitions[i]);
+    for(int i = 0; i < s->definitions.no; i++)
+        ml_free_attribute(s->definitions.array[i]);
     
-    free(s->definitions);
+    free(s->definitions.array);
 
     //free attributes
-    for(int i = 0; i < s->attribute_no; i++)
-        ml_free_attribute(s->attributes[i]);
+    for(int i = 0; i < s->attributes.no; i++)
+        ml_free_attribute(s->attributes.array[i]);
 
-    free(s->attributes);
+    free(s->attributes.array);
 
     //free modifiers
-    for(int i = 0; i < s->modifier_no; i++)
-        ml_free_attribute(s->modifiers[i]);
+    for(int i = 0; i < s->modifiers.no; i++)
+        ml_free_attribute(s->modifiers.array[i]);
 
-    free(s->modifiers);
-
+    free(s->modifiers.array);
 
     //free sections
-    for(int i = 0; i < s->section_no; i++)
-        ml_free_section(s->sections[i]);
+    for(int i = 0; i < s->sections.no; i++)
+        ml_free_section(s->sections.array[i]);
 
-    free(s->sections);
+    free(s->sections.array);
 
     //free values
-    for(int i = 0; i < s->value_no; i++)
-        free(s->values[i]);
+    for(int i = 0; i < s->values.no; i++)
+        free(s->values.array[i]);
 
-    free(s->values);
+    free(s->values.array);
 
     free(s);
 }
 
-void ml_free_root(struct MLRoot* r){
+void ml_free_root(MLSection* r){
+    if(!r)
+        return;
+
     //free definitions
-    for(int i = 0; i < r->definition_no; i++)
-        ml_free_attribute(r->definitions[i]);
+    for(int i = 0; i < r->definitions.no; i++)
+        ml_free_attribute(r->definitions.array[i]);
     
-    free(r->definitions);
-    r->definitions = 0;
-    r->definition_no = 0;
+    free(r->definitions.array);
+    r->definitions.array = 0;
+    r->definitions.no = 0;
     
     //free attributes
-    for(int i = 0; i < r->attribute_no; i++)
-        ml_free_attribute(r->attributes[i]);
+    for(int i = 0; i < r->attributes.no; i++)
+        ml_free_attribute(r->attributes.array[i]);
     
-    free(r->attributes);
-    r->attributes = 0;
-    r->attribute_no = 0;
+    free(r->attributes.array);
+    r->attributes.array = 0;
+    r->attributes.no = 0;
 
     //free sections
-    for(int i = 0; i < r->section_no; i++)
-        ml_free_section(r->sections[i]);
+    for(int i = 0; i < r->sections.no; i++)
+        ml_free_section(r->sections.array[i]);
     
-    free(r->sections);
-    r->sections = 0;
-    r->section_no = 0;
+    free(r->sections.array);
+    r->sections.array = 0;
+    r->sections.no = 0;
 }

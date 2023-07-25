@@ -24,7 +24,6 @@ namespace dtk::common{
             void from(const std::string& s);
             void from(const std::string_view& s);
 
-            //inline char* str(){ return m_str; }
             inline const char* str() const { return m_str; }
             inline size_t size() const { return m_allocated; }
             inline size_t length() const { return strlen(m_str); }

@@ -25,7 +25,7 @@ char* ml_format_str_put_hex_slash(char* s, size_t* size, int v){
         sprintf(buff, "\\x%x", v);
     else
         sprintf(buff, "\\x0%x", v);
-    
+
     strcat(s, buff);
 
     return s;
