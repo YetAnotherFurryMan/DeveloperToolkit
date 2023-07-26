@@ -18,16 +18,22 @@
     <li>Added ml_optimize, ml_remove and ml_add function to ml</li>
     <li>Added ml_optimize% like functions</li>
     <li>Rewritted functions like ml_add% and ml_remove% (they are converting given buffer to MLPointerBuffer and calling to corresponding func)</li>
+    <li>Added a full list of functions, macros and structs in ml to readme</li>
 </ol>
 
 # TODO:
-<ol>
 ## Version 1.0
+<ol>
     <li>Add tests support to mpm</li>
     <li>Add additional support to mpm</li>
     <li>Add support for cmake to mpm</li>
+    <li>Add support for git to mpm</li>
+</ol>
+
 ## Version 1.1
-    <li>Move the project to mpm</li>
+<ol>
+    <li>Move this project to mpm</li>
+    <li>Add github support to mpm</li>
     <li>Add templates for:
         <ul>
             <li>Flex(C, C++)</li>
@@ -42,7 +48,10 @@
             <li>Python(exe, resgen)</li>
         </ul>
     </li>
+</ol>
+
 ## Version 2.0
+<ol>
     <li>Add simple White-Box test macros to log and log++</li>
     <li>Add doc module</li>
 </ol>

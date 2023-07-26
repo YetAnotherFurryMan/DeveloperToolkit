@@ -41,15 +41,85 @@ A set of logging functions for C++. Still work-in-progress.
 </ol>
 
 ## 5.ml
-Well, XML - bad, JSON - bad, TOML - bad, so I wrote a lexer+tookenizer+parser for a new markup language!</br>
+Well, XML - bad, JSON - bad, TOML - bad, so I wrote a new markup language!</br>
 This is used by the <b>mpm</b> module for template-files, module-files and config.
 <ol>
-  <li>dtk::ml::MLAttribute <br> a struct; holds data abound attribute/definition/modifier (simply <i>name</i> and <i>value</i> or 0)</li>
-  <li>dtk::ml::MLSection <br> a struct; holds data abound section (<i>name</i>, <i>definitions</i>, <i>attributes</i>, <i>modifiers</i>, sub<i>sections</i> and <i>values</i>)</li>
-  <li>dtk::ml::MLRoot <br> a struct; holds first data in file (<i>definitions</i>, <i>attributes</i> and <i>sections</i>)</li>
-  <li>dtk::ml::ml_load_file(FILE* f) <br> returns a pointer to MLRoot with data loaded from file <i>f</i></li>
-  <li>dtk::ml::ml_root_to_str(struct MLRoot* r) <br> returns char* to C like string with "decompiled" MLRoot <i>r</i></li>
-  <li>dtk::ml::ml_free_root(struct MLRoot* r) <br> frees memory</li>
+  <li>dtk::ml::MLAttribute <br> a struct; holds data about attribute/definition/modifier (simply <i>name</i> and <i>value</i> or 0)</li>
+  <li>dtk::ml::MLSection <br> a struct; holds data about section (<i>name</i>, <i>definitions</i>, <i>attributes</i>, <i>modifiers</i>, sub<i>sections</i> and <i>values</i>)</li>
+  <li>dtk::ml::MLValueBuffer <br> a struct; holds array of char*, the number of items and the size of a buffer</li>
+  <li>dtk::ml::MLAttributeBuffer <br> a struct; holds array of MLAttribute*, the number of items and the size of a buffer</li>
+  <li>dtk::ml::MLSectionBuffer <br> a struct; holds array of MLSection*, the number of items and the size of a buffer</li>
+  <li>dtk::ml::ml_load_file(FILE* f) <br> returns a pointer to MLSection with data loaded from file <i>f</i> and name "root"</li>
+  <li>dtk::ml::ml_root_to_str(struct MLSection* r) <br> returns char* to C like string with stringify MLSection <i>r</i></li>
+  <li>dtk::ml::ml_free_root(struct MLSection* r) <br> frees memory</li>
+  <li>dtk::ml::ml_find(const MLAttributeBuffer* b, const char* name) <br> returns an index of attribute witch name is equal to <i>name</i> or -1</li>
+  <li>dtk::ml::ml_find_section(const MLSectionBuffer* b, const char* name) <br> returns an index of section witch name is equal to <i>name</i> or -1</li>
+  <li>dtk::ml::ml_find_value(const MLValueBuffer* b, const char* name) <br> returns an index of value what is equal to <i>name</i> or -1</li>
+  <li>dtk::ml::ml_find_attribute(const MLSection* s, const char* name) <br> a macro or inline function; calls ml_find with <i>s->attributes</i> and <i>name</i></li>
+  <li>dtk::ml::ml_find_modifier(const MLSection* s, const char* name) <br> a macro or inline function; calls ml_find with <i>s->modifiers</i> and <i>name</i></li>
+  <li>dtk::ml::ml_find_definition(const MLSection* s, const char* name) <br> a macro or inline function; calls ml_find with <i>s->definitions</i> and <i>name</i></li>
+  <li>
+    With DTK_ML_INHERITANCE defined:
+    <ul>
+      <li>dtk::ml::ml_create_inheritance(MLSection* s) <br> creates definitions' inheritance for <i>s</i></li>
+      <li>dtk::ml::ml_destroy_inheritance(MLSection* s, MLAttributeBuffer* b) <br> destroys definitions' inheritance for <i>s</i></li>
+      <li>dtk::ml::ml_deduplicate_attributes(MLAttributeBuffer* b) <br> removes duplicated MLAttribute (by name) from <i>b</i></li>
+    </ul>
+  </li>
+  <li>
+    With DTK_ML_STR_BUILDER defined:
+    <ul>
+      <li>dtk::ml::ml_put(MLAttribute* d, char* str, const char* prefix, const char initializer, const char* equalizer, const char* terminator) <br> stringify an attribute <i>d</i></li>
+      <li>dtk::ml::ml_put_section(MLSection* s, char* str, const char* prefix) <br> stringify a section</li>
+      <li>dtk::ml::ml_put_value(const char* v, char* str, const char* prefix) <br> stringify a value</li>
+      <li>dtk::ml::ml_put_definition(MLAttribute* d, char* str, const char* prefix) <br> a macro/inline function; calls ml_put</li>
+      <li>dtk::ml::ml_put_attribute(MLAttribute* a, char* str, const char* prefix) <br> a macro/inline function; calls ml_put</li>
+      <li>dtk::ml::ml_put_modifier(MLAttribute* m, char* str) <br> a macro/inline function; calls ml_put</li>
+    </ul>
+  </li>
+  <li>
+    With DTK_ML_BUFFERS defined:
+    <ul>
+      <li>dtk::ml::MLPointerBuffer <br> a struct; holds elements' number, array's size, element's size (type) and array</li>
+      <li>dtk::ml::ml_convert_to_attribute_buffer(MLPointerBuffer* b) <br> converts <i>b</i> to MLAttributeBuffer</li>
+      <li>dtk::ml::ml_convert_to_section_buffer(MLPointerBuffer* b) <br> converts <i>b</i> to MLSectionBuffer</li>
+      <li>dtk::ml::ml_convert_to_value_buffer(MLPointerBuffer* b) <br> converts <i>b</i> to MLValueBuffer</li>
+      <li>dtk::ml::ml_add(MLPointerBuffer* b, void* element) <br> adds <i>element</i> to <i>b</i></li>
+      <li>dtk::ml::ml_remove(MLPointerBuffer* b, size_t index) <br> removes element at <i>index</i> from <i>b</i></li>
+      <li>dtk::ml::ml_optimize(MLPointerBuffer* b) <br> reallocates <i>b</i>'s array if its size is bigger than minimal needed size</li>
+      <li>dtk::ml::ml_convert_from_attribute_buffer_ptr(MLAttributeBuffer* b) <br> a macro/inline function; converts <i>b</i> to MLPointerBuffer</li>
+      <li>dtk::ml::ml_convert_from_section_buffer_ptr(MLSectionBuffer* b) <br> a macro/inline function; converts <i>b</i> to MLPointerBuffer</li>
+      <li>dtk::ml::ml_convert_from_value_buffer_ptr(MLValueBuffer* b) <br> a macro/inline function; converts <i>b</i> to MLPointerBuffer</li>
+      <li>dtk::ml::ml_convert_from_attribute_buffer(MLAttributeBuffer& b) <br> a macro/inline function; converts <i>b</i> to MLPointerBuffer</li>
+      <li>dtk::ml::ml_convert_from_section_buffer(MLSectionBuffer& b) <br> a macro/inline function; converts <i>b</i> to MLPointerBuffer</li>
+      <li>dtk::ml::ml_convert_from_value_buffer(MLValueBuffer& b) <br> a macro/inline function; converts <i>b</i> to MLPointerBuffer</li>
+    </ul>
+  </li>
+  <li>
+    With DTK_ML_DTK_BUILDER defined:
+    <ul>
+      <li>dtk::ml::ml_new_attribute(const char* name, const char* value) <br> allocates a new MLAttribute with <i>name</i> and <i>value</i></li>
+      <li>dtk::ml::ml_new_section() <br> allocates a new MLSection</li>
+      <li>dtk::ml::ml_add_attribute(MLAttributeBuffer* b, MLAttribute* a) <br> adds <i>a</i> to <i>b</i></li>
+      <li>dtk::ml::ml_add_section(MLSectionBuffer* b, MLSection* s) <br> adds <i>s</i> to <i>b</i></li>
+      <li>dtk::ml::ml_add_value(MLValueBuffer* b, char* v) <br> adds <i>v</i> to <i>b</i></li>
+      <li>dtk::ml::ml_remove_attribute(MLAttributeBuffer* b, size_t index) <br> removes the element at <i>index</i> from <i>b</i> (calls ml_remove)</li>
+      <li>dtk::ml::ml_remove_section(MLSectionBuffer* b, size_t index) <br> removes the element at <i>index</i> from <i>b</i> (calls ml_remove)</li>
+      <li>dtk::ml::ml_remove_value(MLValueBuffer* b, size_t index) <br> removes the element at <i>index</i> from <i>b</i> (calls ml_remove)</li>
+      <li>dtk::ml::ml_optimize_attributes(MLAttributeBuffer* b) <br> reallocates <i>b</i>'s array if its size is bigger than minimal needed size (calls ml_optimize)</li>
+      <li>dtk::ml::ml_optimize_sections(MLSectionBuffer* b) <br> reallocates <i>b</i>'s array if its size is bigger than minimal needed size (calls ml_optimize)</li>
+      <li>dtk::ml::ml_optimize_values(MLValueBuffer* b) <br> reallocates <i>b</i>'s array if its size is bigger than minimal needed size (calls ml_optimize)</li>
+      <li>dtk::ml::ml_copy_attribute(MLAttribute* a) <br> a macro/inline function; calls ml_new_attribute with <i>a->name</i> and <i>a->value</i></li>
+    </ul>
+  </li>
+  <li>
+    With DTK_ML_ELEMENT_FREE defined:
+    <ul>
+      <li>dtk::ml::ml_free_attribute(MLAttribute* a) <br> frees <i>a</i> and its name and value</li>
+      <li>dtk::ml::ml_free_section(MLSection* s) <br> frees <i>s</i> and its elements</li>
+      <li>dtk::ml::ml_free_value(char* v) <br> a macro/inline function; calls free with <i>v</i></li>
+    </ul>
+  </li>
 </ol>
 
 ## 6.mpm
